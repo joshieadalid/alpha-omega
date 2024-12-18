@@ -3,10 +3,10 @@ async function sendAudioToServer(audioBlob) {
         const formData = new FormData();
 
         // Agrega el audio con un nombre y extensión
-        formData.append('audio', audioBlob, 'audio_recording.wav');
+        formData.append('audio', audioBlob, 'audio-recording.ogg');
 
         // Envía el audio al servidor
-        const response = await fetch('/chatbot/meeting_audio', {
+        const response = await fetch('/api/meeting_audio', {
             method: 'POST',
             body: formData,
         });
@@ -28,7 +28,14 @@ async function sendAudioToServer(audioBlob) {
         try {
             const data = await response.json();
             console.log("Respuesta del servidor (JSON):", data);
-            return `Respuesta: ${JSON.stringify(data)}`;
+
+            // Verifica si el atributo 'reply' existe
+            if ('reply' in data) {
+                return `Respuesta: ${data.reply}`;
+            } else {
+                console.error("El JSON no contiene el atributo 'reply':", data);
+                return "Error: El servidor no devolvió el atributo 'reply'.";
+            }
         } catch {
             const text = await response.text();
             console.log("Respuesta del servidor (texto):", text);

@@ -62,11 +62,11 @@ function stopRecording() {
         mediaRecorder.stop();
         document.getElementById("responseOutput").innerText = "Procesando grabación...";
         mediaRecorder.onstop = async () => {
-            const audioBlob = new Blob(audioChunks, { type: "audio/wav" });
+            const audioBlob = new Blob(audioChunks, { type: "audio/ogg" });
 
             // Enviar el audio al servidor
             const response = await sendAudioToServer(audioBlob);
-            document.getElementById("responseOutput").innerText = response.message;
+            document.getElementById("responseOutput").innerText = response;
 
             // Reiniciar botones
             resetButtons();

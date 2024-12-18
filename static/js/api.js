@@ -4,7 +4,7 @@ async function sendAudioToServer(audioBlob) {
     formData.append('audio', audioBlob);
 
     try {
-        const response = await fetch(`/chatbot/audio`, {
+        const response = await fetch(`/api/audio`, {
             method: 'POST',
             body: formData,
         });

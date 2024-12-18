@@ -1,214 +1,143 @@
+# services/openai_service.py
 import io
-import os
 import json
-import openai
-from result import *
+
 from werkzeug.datastructures import FileStorage
 
-from services.action_t import Action
 
-# Configuración de OpenAI
-openai.api_key = os.getenv("API_KEY_OPENAI")
+class OpenAIService:
+    """Servicio que interactúa con la API de OpenAI."""
 
-# ID de tu modelo ajustado
-FINE_TUNED_MODEL_ID = "gpt-3.5-turbo"
+    def __init__(self, openai_client, model_type: str):
+        self.openai_client = openai_client
+        self.model_type = model_type
 
-# Personalidad del asistente y módulo de precisión
-AI_personality_conf = """Eres un asistente y secretario con 30 años de experiencia en el desarrollo de proyectos de 
-software y tecnología de la información. Tu objetivo es ayudar a las empresas y ayudar a los clientes para elegir 
-funciones en jira y responder preguntas casuales , tu nombre es Jarvis"""
+    def transcribe_audio(self, audio_file: FileStorage) -> str:
+        # Validación del archivo
+        if not audio_file or not isinstance(audio_file, FileStorage):
+            raise ValueError("No se proporcionó un archivo válido")
 
-super_precision = "Eres un modulo de un programa que sigue las instrucciones al pie de la letra"
+        if not audio_file.filename.endswith(".ogg"):
+            print(audio_file.filename)
+            raise ValueError("El archivo no es un OGG válido")
 
+        try:
+            # Procesar el archivo
+            audio_bytes = audio_file.read()
+            audio_io = io.BytesIO(audio_bytes)
+            audio_io.name = audio_file.filename
 
-def transcribe_audio(audio_file: FileStorage) -> Result[str, str]:
-    # Validación del archivo
-    if not audio_file or not isinstance(audio_file, FileStorage):
-        return Err("No se proporcionó un archivo válido")
+            # Enviar a OpenAI
+            transcription = self.openai_client.audio.transcriptions.create(model="whisper-1", language="es",
+                                                                           file=audio_io)
 
-    if not audio_file.filename.endswith(".wav"):
-        print(audio_file.filename)
-        return Err("El archivo no es un WAV válido")
+            return transcription.text
+        except Exception as e:
+            raise Exception(f"Error al transcribir el archivo: {str(e)}")
 
-    try:
-        # Procesar el archivo
-        audio_bytes = audio_file.read()
-        audio_io = io.BytesIO(audio_bytes)
-        audio_io.name = audio_file.filename
+    def extract_json(self, text):
+        try:
+            start_index = text.find("```json") + len("```json")
+            end_index = text.find("```", start_index)
+            json_string = text[start_index:end_index].strip()
+            return json.loads(json_string)
+        except Exception as error:
+            return {"error": str(error)}
 
-        # Enviar a OpenAI
-        transcription = openai.audio.transcriptions.create(model="whisper-1", language="es", file=audio_io)
+    def extract_python(self, text):
+        try:
+            start_index = text.find("```python") + len("```python")
+            end_index = text.find("```", start_index)
+            python_code = text[start_index:end_index].strip()
+            return python_code
+        except Exception as error:
+            return {"error": str(error)}
 
-        return Ok(transcription.text)
-    except Exception as e:
-        return Err(str(e))
-
-
-def process_message(user_message):
-    """
-    Procesa el mensaje de texto: obtiene la respuesta de OpenAI y ejecuta acciones en Jira.
-    """
-    if not user_message:
-        raise ValueError("El mensaje de texto está vacío")
-
-    response = get_action_code(user_message)
-    return response
-
-
-def get_action_code(user_message) -> int:
-    formatted_message = f"""
-        Verifica si el mensaje se asocia a alguna de estas peticiones en Jira:
-        1. Crear proyecto
-        2. Eliminar proyecto
-        3. Obtener proyectos
-        4. Obtener usuarios
-        No digas nada mas que el código. Si se asocia, responde únicamente con el número de la opción. Si no, responde 0.
-        Mensaje: {user_message}
+    def generate_script(self, text: str) -> str:
         """
-
-    try:
-        # Usar el modelo ajustado (fine-tuned)
-        response = openai.chat.completions.create(model=FINE_TUNED_MODEL_ID,
-                                                  messages=[{"role": "system", "content": AI_personality_conf},
-                                                            {"role": "user", "content": formatted_message}])
-        return int(response.choices[0].message.content)
-    except Exception as e:
-        raise Exception(f"Error en la API de OpenAI: {e}")
-
-
-# Modo reunión
-
-# Tabla de acciones definidas
-ACTION_TABLE = {1: "crear proyecto", 2: "eliminar proyecto", 3: "obtener proyectos", 4: "obtener usuarios"}
-
-
-def format_actions_to_json(actions_text: str) -> list[Action]:
-    """
-    Convierte el texto de acciones en una lista JSON estructurada.
-    """
-    actions: list[Action] = []
-    try:
-        lines = actions_text.strip().split("\n")
-        for line in lines:
-            # Verifica que la línea comience con "-"
-            if line.strip().startswith("-"):
-                # Divide la línea para extraer el ID y la descripción
-                parts = line.split(": ", 2)  # Dividir solo en los dos primeros ":" encontrados
-                if len(parts) >= 3:
-                    action_id = parts[0].strip().lstrip("- ").split()[0]  # Extrae el ID
-                    action_name = parts[1].strip()  # Extrae el nombre de la acción
-                    description = parts[2].strip()  # Extrae la descripción
-
-                    # Agrega la acción al resultado
-                    actions.append(
-                        {"action_id": int(action_id), "action_name": action_name, "description": description})
-    except Exception as e:
-        raise ValueError(f"Error al formatear las acciones: {e}")
-    return actions
-
-
-def parsear_json(texto) -> dict | list:
-    # Remover las comillas de código invertidas y la leyenda "json"
-    texto_limpio = texto.replace("```json", "").replace("```", "").strip()
-    # Convertir el texto limpio en un objeto JSON
-    return json.loads(texto_limpio)
-
-
-def extract_actions(text) -> list[Action]:
-    """
-    Extrae acciones a partir de un texto transcrito y las devuelve como una lista de objetos JSON.
-    """
-    if not text:
-        raise ValueError("El texto proporcionado está vacío")
-
-    prompt = {
-        "role": "system",
-        "content": "Eres un asistente experto en identificar acciones específicas a partir de texto y convertirlas a un formato JSON estructurado."
-    }
-
-    user_message = {
-        "role": "user",
-        "content": f"""
-        A partir del siguiente texto, identifica las acciones relevantes como una lista de acciones. En una lista de objetos en JSON. Formato:
-
-        [
-            {{
-                "function_name": "create_project",
-                "args": {{
-                    "key":"Mandatory. Must match Jira project key requirements, usually only 2-10 uppercase characters.",
-                    "name":"If not specified it will use the key value."
-                }}
-            }},
-            {{
-                "function_name": "delete_project",
-                "args": {{
-                    "pid":"Jira projectID or Project or slug.",
-                }}
-            }},
-            {{
-                "function_name": "projects",
-                "args": {{
-                }}
-            }},
-            {{
-                "function_name": "create_issue",
-                "args": {{
-                    "fields":{{
-                        'project': {{"key": 'TMT'}},
-                        'summary': 'Tomate peligroso',
-                        'description': 'Pinguinos de Palmer',
-                        'issuetype': {{'name': 'Bug'}} # Tipo de issue: Bug, Task, etc.
-                    }}
-                }}
-            }},
-            {{
-                "function_name": "assign_issue",
-                "args": {{
-                    'issue':'the issue ID or key to assign',
-                    'assignee':'the user to assign the issue to'
-                }}
-            }},
-            {{
-                "function_name": "transition_issue",
-                "args": {{
-                    'issue':'ID or key of the issue to perform the transition on',
-                    'transition':'ID or name of the transition to perform (11 To Do, 21 In  Progress, 31 Done)'
-                }}
-            }},
-        ]
-
-        Dada la siguiente información: {text}
+        Genera un script Python a partir del texto proporcionado y lo devuelve como código.
         """
-    }
+        # prompt = {
+        #    "role": "system",
+        #    "content": """Eres un asistente experto en generar código Python que interactúe con la API de la biblioteca del cliente de Jira.
+        #        El objeto que gestionará la conexión con la API es:
+        #        jira = JiraClient()
+        #        - No necesitas importar el cliente.
+        #        create_project no necesita summary. Solo el key y el name.
+        #        - Si necesitas usar create_issue(fields: dict[str, Any] | None = None, prefetch: bool = True, **fieldargs) → Issue.
+        #        - fields es un objeto, con atributos project, summary, description, issuetype, project es un objeto con atributo key. issuetype es un objeto con atributo name.
+        #        - create_issue no las asigna automáticamente, para eso necesitas assign_issue:  assign_issue(issue: int | str, assignee: str | None) → bool[source]
+        #        - El resultado final lo guardarás en la variable result.
+        #        - Para listar todos los usuarios, el query debe tener un espacio.
+        #        - Para borrar un issue primero obtenlo y aplícale delete, por ejemplo: jira.issue('ISSUE_KEY').delete())
+        #        """
+        # }
+        prompt = {"role": "system", "content": """
+                Eres un asistente experto en generar código Python para interactuar con la API del cliente de Jira.
+                El objeto que se utilizará para gestionar la conexión con la API es:
+                    jira = JiraClient()
+                **No necesitas importar el cliente.**
+    
+                ### Detalles importantes:
+                1. **Creación de proyectos:**
+                - Utiliza create_project con los atributos key y name. No es necesario incluir summary.
+    
+                2. **Creación de issues:**
+                - Utiliza create_issue(fields: dict[str, Any] | None = None, prefetch: bool = True, **fieldargs) → Issue.
+                - El objeto fields debe incluir los siguientes atributos obligatorios:
+                    - project: Un objeto con el atributo key.
+                    - summary: Un resumen breve del issue.
+                    - description: Una descripción detallada del issue.
+                    - issuetype: Un objeto con el atributo name que define el tipo de issue.
+                - Nota: create_issue no asigna automáticamente los issues. Para ello, utiliza el método assign_issue.
+    
+                3. **Asignación de issues:**
+                - Utiliza assign_issue(issue: int | str, assignee: str | None) → bool.
+                - El parámetro issue es el identificador (ID o clave) del issue.
+                - El parámetro assignee es el nombre del usuario al que se asignará el issue.
+    
+                4. **Listar usuarios:**
+                - Para listar todos los usuarios, realiza un query que contenga un espacio en blanco como criterio.
+    
+                5. **Eliminación de issues:**
+                - Para borrar un issue, primero obtén el issue utilizando su clave, y luego aplica el método delete().
+                - Ejemplo:
+                    jira.issue('ISSUE_KEY').delete()
+                6. **Almacenamiento de resultados:**
+                - Guarda el resultado final de cualquier operación en la variable result.
+                """}
 
-    try:
-        print("User message: ", text)
-        response = openai.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[prompt, user_message]
-        )
-        # La respuesta ya debería estar en formato JSON si el modelo sigue las instrucciones.
-        actions_json = response.choices[0].message.content.strip()
-        print("Actions json: ", actions_json)
-        data = parsear_json(actions_json)
+        user_message = {"role": "user",
+            "content": f"""Genera el código Python necesario para ejecutar las acciones a partir del siguiente texto: '{text}'
+                 **Estructura esperada:**
+                    - Asegúrate de que el código sea funcional y siga las reglas de interacción con la API del cliente de Jira.
+                     - Todos los resultados deben almacenarse en una variable llamada result."""}
 
-        print("Respuesta chatgpt: ", data)
-        # Validamos y convertimos la respuesta a una lista de diccionarios.
-        return data
-    except Exception as e:
-        raise Exception(f"Error en la API de OpenAI o en el procesamiento de JSON: {e}")
+        try:
+            # Generar el script con la API de OpenAI
+            response = self.openai_client.chat.completions.create(model=self.model_type,
+                # Puedes cambiar el modelo según sea necesario
+                messages=[prompt, user_message])
 
+            # Obtener el código generado
+            generated_script = response.choices[0].message.content.strip()
+            return generated_script  # Devolver el código generado
 
-def extract_actions_from_audio(audio_file) -> list[Action]:
-    """
-    Transcribe el audio y luego extrae las acciones.
-    """
-    transcription_result: Ok[str] | Err[str] = transcribe_audio(audio_file)
+        except Exception as e:
+            raise Exception(f"Error al generar el script: {e}")
 
-    if isinstance(transcription_result, Err):
-        return transcription_result  # Retorna el error directamente si falla la transcripción
+    def format_api_response(self, api_json_response: str) -> str:
+        system_prompt = {"role": "system",
+            "content": """Traduce las respuestas en formato JSON provenientes de la API REST de Jira a un formato de texto plano y no markdown, comprensible para cualquier persona, explicando los datos relevantes de manera clara y estructurada, omitiendo detalles técnicos innecesarios. Debe ser al estilo de mensaje de debug, impersonal. Como si un sistema estuviera informando acerca de lo ocurrido. Solo mencionas los datos, sin interpretarlos."""}
 
-    transcription_text = transcription_result.unwrap()  # Extrae el texto si es Ok
-    actions_result: list[Action] = extract_actions(transcription_text)
+        user_instruction = {"role": "user",
+            "content": f"Este es un JSON con la respuesta de una API tras una transacción. Por favor, analiza la respuesta y proporciona un resumen claro y breve que explique qué significa la respuesta y cuál es el estado o resultado de la transacción. Ignora detalles técnicos o atributos secundarios. Solo indica de manera comprensible qué ocurrió con la transacción (por ejemplo, si fue exitosa, fallida, pendiente, o algún detalle relevante). Aquí está el JSON: {api_json_response}."}
+        try:
+            chat_response = self.openai_client.chat.completions.create(model=self.model_type,
+                # Puedes cambiar el modelo según sea necesario
+                messages=[system_prompt, user_instruction])
 
-    return actions_result  # Devuelve el resultado de extraer acciones (Ok o Err)
+            formated_text = chat_response.choices[0].message.content.strip()
+            return formated_text  # Devolver el texto generado
+        except Exception as e:
+            raise Exception(f"Error al generar el script: {e}")
