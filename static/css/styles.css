@@ -1,0 +1,45 @@
+/* Estilos para animaciones */
+.centered {
+    position: absolute;
+    top: 20%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    transition: all 0.5s ease;
+}
+
+.fade-out {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+}
+
+.mode-option {
+    position: relative;
+    transition: all 0.5s ease;
+}
+
+/* Estilos para los botones */
+.button-style {
+    min-width: 84px;
+    max-width: 480px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-radius: 9999px;
+    height: 48px;
+    padding-left: 20px;
+    padding-right: 20px;
+    background-color: #ee2b2b;
+    color: white;
+    font-weight: bold;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+}
+
+.button-style:hover {
+    background-color: #ff4c4c;
+}
+
+/* Estilos adicionales si los necesitas */

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Página{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body class="bg-[#221111] min-h-screen font-sans relative overflow-hidden" style="font-family: Manrope, 'Noto Sans', sans-serif;">
+    <!-- Header -->
+    <header class="flex items-center justify-between px-6 py-4 bg-[#482323] text-white">
+        <!-- Menu Toggle Button (Izquierda) -->
+        <button 
+            class="text-white text-2xl p-2 rounded focus:outline-none" 
+            onclick="toggleMenu()">☰
+        </button>
+
+        <!-- Logo y Nombre (Derecha) -->
+        <div class="flex items-center gap-4">
+            <img src="{{ url_for('static', filename='images/logo_alphaomega.png') }}" alt="AlphaOmega Logo" class="w-12 h-12">
+            <h1 class="text-2xl font-bold">AlphaOmega Team</h1>
+        </div>
+    </header>
+
+    <!-- Barra lateral -->
+    <div id="menuBar" class="fixed top-0 left-0 h-full w-64 bg-[#482323] text-white transform -translate-x-full transition-transform duration-300">
+        <div class="p-4 text-xl font-bold border-b border-gray-600">Menú</div>
+        <nav class="flex flex-col p-4 space-y-4">
+            <a href="{{ url_for('menu') }}" class="hover:text-[#c99292]">Consultar Minutas Guardadas</a>
+            <a href="{{ url_for('menu') }}" class="hover:text-[#c99292]">Historial de Comandos Directos</a>
+            <a href="#otras" class="hover:text-[#c99292]">Otras Opciones</a>
+            <a href="{{ url_for('menu') }}" class="hover:text-[#c99292]" onclick="toggleMenu()">Regresar</a>
+        </nav>
+    </div>
+
+    <!-- Contenido principal -->
+    <div id="mainContainer" class="container mx-auto px-4 transition-all duration-500">
+        {% block content %}
+        <!-- Cada página insertará su contenido aquí -->
+        {% endblock %}
+    </div>
+
+    <footer class="text-center text-white text-sm py-4">
+        @Alphaomega. Todos los derechos reservados.
+    </footer>
+
+    <!-- JavaScript Inline -->
+    <script>
+        function toggleMenu() {
+            const menuBar = document.getElementById('menuBar');
+            menuBar.classList.toggle('-translate-x-full');
+        }
+    </script>
+</body>
+</html>

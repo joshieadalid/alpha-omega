@@ -1,0 +1,63 @@
+{
+    "projects": [
+      {
+        "key": "AI",
+        "name": "AI Project",
+        "id": "10045"
+      },
+      {
+        "key": "CNT",
+        "name": "Cinta",
+        "id": "10041"
+      },
+      {
+        "key": "DEATHJOHN",
+        "name": "DEATHJOHN",
+        "id": "10057"
+      },
+      {
+        "key": "MRA",
+        "name": "María's Project",
+        "id": "10038"
+      },
+      {
+        "key": "PRUEBA",
+        "name": "Proyecto de Prueba",
+        "id": "10052"
+      },
+      {
+        "key": "RTH",
+        "name": "prueba123",
+        "id": "10048"
+      }
+    ],
+    "error": {
+      "message": "JiraError HTTP 400",
+      "url": "https://alphaomegaissi6.atlassian.net/rest/api/2/project",
+      "response_headers": {
+        "Date": "Fri, 22 Nov 2024 05:58:06 GMT",
+        "Content-Type": "application/json;charset=UTF-8",
+        "Server": "AtlassianEdge",
+        "Timing-Allow-Origin": "*",
+        "X-Arequestid": "d4fd07e2557f2239de9f7ce1a67902ef",
+        "X-Aaccountid": "712020%3Abbd0967a-856f-4e09-be5a-13b51c668f38",
+        "Cache-Control": "no-cache, no-store, no-transform",
+        "X-Content-Type-Options": "nosniff",
+        "X-Xss-Protection": "1; mode=block",
+        "Atl-Traceid": "9ad121e90acb4cfa9162806e9739f1b0",
+        "Atl-Request-Id": "9ad121e9-0acb-4cfa-9162-806e9739f1b0",
+        "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
+        "Report-To": "{\"endpoints\": [{\"url\": \"https://dz8aopenkvv6s.cloudfront.net\"}], \"group\": \"endpoint-1\", \"include_subdomains\": true, \"max_age\": 600}",
+        "Nel": "{\"failure_fraction\": 0.001, \"include_subdomains\": true, \"max_age\": 600, \"report_to\": \"endpoint-1\"}",
+        "Server-Timing": "atl-edge;dur=152,atl-edge-internal;dur=12,atl-edge-upstream;dur=141,atl-edge-pop;desc=\"aws-us-east-1\"",
+        "Transfer-Encoding": "chunked"
+      },
+      "response_text": {
+        "errorMessages": [],
+        "errors": {
+          "projectName": "A project with that name already exists."
+        }
+      }
+    }
+  }
+  

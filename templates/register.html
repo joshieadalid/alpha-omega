@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Usuario</title>
+    <!-- Importación de Google Fonts y TailwindCSS -->
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?display=swap&family=Manrope:wght@400;500;700;800&family=Noto+Sans:wght@400;500;700;900"
+    />
+    <!-- TailwindCSS CDN -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- Importación de Font Awesome desde CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Enlace al archivo CSS personalizado -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="bg-[#221111] min-h-screen font-sans flex items-center justify-center" style="font-family: Manrope, 'Noto Sans', sans-serif;">
+    <!-- Contenedor del formulario de registro -->
+    <div class="bg-[#482323] text-white p-8 rounded-lg shadow-lg w-full max-w-sm">
+        <h2 class="text-2xl font-bold text-center mb-6">Registro de Usuario</h2>
+        
+        <!-- Formulario de registro -->
+        <form action="/register" method="POST" class="space-y-4">
+            <!-- Campo de nombre -->
+            <div>
+                <label for="name" class="block text-sm font-medium">Nombre</label>
+                <input type="text" id="name" name="name" required
+                       class="mt-1 block w-full p-2 bg-[#3b2929] border border-gray-600 rounded focus:ring focus:ring-[#c99292] text-white">
+            </div>
+            
+            <!-- Campo de correo electrónico -->
+            <div>
+                <label for="email" class="block text-sm font-medium">Correo Electrónico</label>
+                <input type="email" id="email" name="email" required
+                       class="mt-1 block w-full p-2 bg-[#3b2929] border border-gray-600 rounded focus:ring focus:ring-[#c99292] text-white">
+            </div>
+            
+            <!-- Campo de contraseña -->
+            <div>
+                <label for="password" class="block text-sm font-medium">Contraseña</label>
+                <input type="password" id="password" name="password" required
+                       class="mt-1 block w-full p-2 bg-[#3b2929] border border-gray-600 rounded focus:ring focus:ring-[#c99292] text-white">
+            </div>
+            
+            <!-- Botón de registro -->
+            <button type="submit" class="w-full bg-red-600 text-white text-lg py-2 rounded hover:bg-red-700 transition duration-300">Registrar</button>
+        </form>
+        
+        <!-- Hipervínculo para volver al inicio de sesión -->
+        <div class="text-center mt-4">
+            <a href="/" class="text-[#c99292] hover:underline">¿Ya tienes una cuenta? Inicia sesión</a>
+        </div>
+    </div>
+
+    <!-- Enlace al archivo JavaScript personalizado -->
+    <script src="script.js"></script>
+</body>
+</html>
