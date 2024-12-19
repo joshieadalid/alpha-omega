@@ -1,13 +1,17 @@
+from datetime import datetime
+
+import jsonpickle
+import openai
 from flask import Blueprint, request, jsonify
-from werkzeug.datastructures import FileStorage
 from jira import JIRA
+from werkzeug.datastructures import FileStorage
+from flask import Blueprint, request, jsonify, current_app
+from blueprints.elevenlabs_bp import tts_stream_endpoint
+from config import Config  # Configuración global
+from services.minute_service import MinuteService
 from services.openai_service import OpenAIService
 from services.script_executor import ScriptExecutor
-from config import Config  # Configuración global
-import openai
-import jsonpickle
-from utils.auth import jwt_required
-
+from services.elevenlabs_service import ElevenLabsService
 # Crear Blueprint con prefijo '/chatbot'
 chatbot_bp = Blueprint('chatbot_route', __name__)
 
@@ -16,21 +20,13 @@ openai.api_key = Config.OPENAI_API_KEY
 openai_client = openai
 
 # Configuración de Jira
-jira_client = JIRA(
-    server=f"https://{Config.DOMAIN}.atlassian.net",
-    basic_auth=(Config.ATLASSIAN_USERNAME, Config.ATLASSIAN_API_KEY)
-)
+jira_client = JIRA(server=f"https://{Config.DOMAIN}.atlassian.net",
+    basic_auth=(Config.ATLASSIAN_USERNAME, Config.ATLASSIAN_API_KEY))
 
 # Inicialización de servicios
-openai_service = OpenAIService(
-    openai_client=openai_client,
-    model_type="gpt-4o",
-)
+openai_service = OpenAIService(openai_client=openai_client, model_type="gpt-4o-mini", )
 
-executor = ScriptExecutor(
-    openai_service=openai_service,
-    jira_client=jira_client
-)
+executor = ScriptExecutor(openai_service=openai_service, jira_client=jira_client)
 
 
 # Helper para formatear la respuesta
@@ -41,7 +37,6 @@ def _format_response(response):
 
 
 @chatbot_bp.route("/meeting", methods=["POST"])
-
 def chat_meeting():
     """Endpoint para manejar mensajes de texto."""
     user_message = request.get_json().get("message", "")
@@ -63,36 +58,18 @@ def meeting_audio():
     formatted_response = _format_response(response)
     return jsonify({"reply": formatted_response}), 200
 
-from datetime import datetime
+
 @chatbot_bp.route("/minutes_text", methods=["POST"])
 def minute():
     user_message = request.get_json().get("message", "")
     print("User message:", user_message)
-    response:str = executor.execute_prompt_script(user_message)
+    execution_result: str = executor.execute_prompt_script(user_message)
     minute: str = openai_service.generate_minute(user_message, datetime.now().strftime("%d de %B de %Y, %H:%M:%S"))
-    formatted_response:str = _format_response(response)
-    return jsonify({"reply": formatted_response, "minute": minute}), 200
+    timestamp = datetime.now().strftime("%d de %B de %Y, %H:%M:%S")
+    MinuteService.add_minute(timestamp, minute)
+    formatted_response: str = _format_response(execution_result)
+    service=ElevenLabsService(Config.ELEVENLABS_API_KEY)
 
-# /api/minutes
-# Ruta para obtener todas las minutas
-@chatbot_bp.route("/api/minutes", methods=["GET"])
-def get_minutes():
-    minutes = MinuteService.get_all_minutes()
-    return jsonify({
-        "reply": [
-            {"timestamp": minute.timestamp, "text": minute.text} for minute in minutes
-        ]
-    })
+    audio_stream, mimetype, headers = service.tts_to_mp3(formatted_response)
 
-
-# Ruta para agregar una nueva minuta (ejemplo)
-@chatbot_bp.route("/api/minutes", methods=["POST"])
-def add_minute():
-    # Simula datos para agregar
-    timestamp = "2024-12-18T12:00:00"
-    text = "Nueva minuta de prueba"
-    new_minute = MinuteService.add_minute(timestamp, text)
-    return jsonify({
-        "message": "Minuta agregada exitosamente",
-        "minute": {"timestamp": new_minute.timestamp, "text": new_minute.text}
-    })
+    return jsonify({"reply": formatted_response, "minute": minute, "audio": current_app.response_class(audio_stream, mimetype=mimetype, headers=headers)}), 200

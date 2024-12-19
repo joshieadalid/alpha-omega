@@ -11,7 +11,7 @@ from blueprints.modes_bp import modes_bp
 
 # Servicios
 from services.db_service import init_db, close_database_connection
-
+from blueprints.elevenlabs_bp import elevenlabs_bp
 
 def create_app():
     app = Flask(__name__)
@@ -29,7 +29,7 @@ def create_app():
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(modes_bp, url_prefix='/modes')
     app.register_blueprint(minutes_bp, url_prefix='/api')
-
+    app.register_blueprint(elevenlabs_bp, url_prefix='/tts')  # Nuevo Blueprint
 
     # Eventos de cierre para la base de datos
     app.teardown_appcontext(close_database_connection)

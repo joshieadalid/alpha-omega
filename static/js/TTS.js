@@ -45,3 +45,4 @@ async function textToSpeechStream(text) {
     // const voiceId = 'wJqPPQ618aTW29mptyoc'; // ID de voz de Ana 
     // const voiceId = 'LcfcDJNUP1GQjkzn1xUU'; // ID de voz de Emily
     // const voiceID = 'zcAOhNBS3c14rBihAFp1'; // ID de voz de Giovanni
+

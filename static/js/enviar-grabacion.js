@@ -18,7 +18,6 @@ async function sendAudioToServer(audioBlob) {
                 console.error("Error en el servidor (JSON):", errorData);
                 return `Error del servidor: ${JSON.stringify(errorData)}`;
             } catch {
-                // Leer texto directamente si no es un JSON válido
                 const errorText = await response.text();
                 console.error("Error en el servidor (texto):", errorText);
                 return `Error del servidor: ${errorText}`;
@@ -26,23 +25,21 @@ async function sendAudioToServer(audioBlob) {
         }
 
         // Procesa la respuesta exitosa
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
+        try {
             const data = await response.json();
             console.log("Respuesta del servidor (JSON):", data);
 
+            // Verifica si el atributo 'reply' existe
             if ('reply' in data) {
-                const replyText = data.reply;
-                await textToSpeechStream(replyText); // Llama a la función de TTS
-                return `Respuesta: ${replyText}`;
+                return `Respuesta: ${data.reply}`;
             } else {
                 console.error("El JSON no contiene el atributo 'reply':", data);
                 return "Error: El servidor no devolvió el atributo 'reply'.";
             }
-        } else {
+        } catch {
             const text = await response.text();
             console.log("Respuesta del servidor (texto):", text);
-            await textToSpeechStream(text); // Llama a la función de TTS
+            await textToSpeechStream(text);
             return `Respuesta: ${text}`;
         }
     } catch (error) {
@@ -88,13 +85,9 @@ async function textToSpeechStream(text) {
 
         // Reproducir el audio
         const audio = new Audio(audioURL);
-        audio.play();
+        await audio.play();
     } catch (error) {
         console.error("Error al generar o reproducir el audio:", error);
     }
 }
 
-// const voiceId = 'w56kEoqD0CoEldmNCYKE'; // ID de voz de Farid Dieck
-    // const voiceId = 'wJqPPQ618aTW29mptyoc'; // ID de voz de Ana 
-    // const voiceId = 'LcfcDJNUP1GQjkzn1xUU'; // ID de voz de Emily
-    // const voiceID = 'zcAOhNBS3c14rBihAFp1'; // ID de voz de Giovanni
