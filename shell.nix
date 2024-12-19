@@ -10,7 +10,6 @@ pkgs.mkShell {
         # APIs
         openai
         jira
-        result
         requests
         # HTTPS
         pyopenssl
@@ -18,6 +17,8 @@ pkgs.mkShell {
         # Cifrado en la base de datos
         bcrypt
         jsonpickle
+        # Flask
+        pyjwt
     ]))
   ];
 }

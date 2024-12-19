@@ -1,55 +1,55 @@
-from flask import Blueprint, request, render_template, redirect, url_for, session
-from services.db_service import get_database_connection
-import bcrypt
+from flask import Blueprint, request, jsonify, current_app
+import jwt
+from datetime import datetime, timedelta, timezone
+from werkzeug.security import generate_password_hash, check_password_hash
+from services.db_service import get_db
 
 auth_bp = Blueprint('auth', __name__)
 
-
-@auth_bp.route('/', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        email = request.form['email']
-        password = request.form['password']
-
-        db = get_database_connection()
-        user = db.execute('SELECT * FROM users WHERE email = ?', (email,)).fetchone()
-
-        if user and bcrypt.checkpw(password.encode('utf-8'), user['password'].encode('utf-8')):
-            session['user_name'] = user['name']
-            return redirect(url_for('auth.menu'))
-
-        return "Invalid credentials. Please try again.", 401
-
-    return render_template('login.html')
-
-
-@auth_bp.route('/register', methods=['GET', 'POST'])
+@auth_bp.route('/register', methods=['POST'])
 def register():
-    if request.method == 'POST':
-        name = request.form['name']
-        email = request.form['email']
-        password = request.form['password']
-        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+    data = request.json
+    username = data.get('username')
+    password = data.get('password')
 
-        db = get_database_connection()
-        try:
-            db.execute('INSERT INTO users (name, email, password) VALUES (?, ?, ?)',
-                       (name, email, hashed_password.decode('utf-8')))
-            db.commit()
-            return render_template('registration_success.html', name=name)
-        except:
-            return render_template('register.html', error="Email already registered.")
+    if not username or not password:
+        return jsonify({'error': 'Missing username or password'}), 400
 
-    return render_template('register.html')
+    hashed_password = generate_password_hash(password)
+    db = get_db()
 
+    try:
+        db.execute(
+            "INSERT INTO users (username, password) VALUES (?, ?)",
+            (username, hashed_password)
+        )
+        db.commit()
+        return jsonify({'message': 'User registered successfully!'}), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
 
-@auth_bp.route('/menu')
-def menu():
-    user_name = session.get('user_name', 'User')
-    return render_template('menu.html', user_name=user_name)
+@auth_bp.route('/login', methods=['POST'])
+def login():
+    data = request.json
+    username = data.get('username')
+    password = data.get('password')
 
+    if not username or not password:
+        return jsonify({'error': 'Missing username or password'}), 400
 
-@auth_bp.route('/logout')
-def logout():
-    session.clear()
-    return redirect(url_for('auth.login'))
+    db = get_db()
+    user = db.execute(
+        "SELECT * FROM users WHERE username = ?", (username,)
+    ).fetchone()
+
+    if user and check_password_hash(user['password'], password):
+        token = jwt.encode(
+            {
+                'username': username,
+                'exp': datetime.now(timezone.utc) + timedelta(hours=1)
+            },
+            current_app.config['SECRET_KEY'],
+            algorithm='HS256'
+        )
+        return jsonify({'token': token})
+    return jsonify({'message': 'Invalid username or password'}), 401

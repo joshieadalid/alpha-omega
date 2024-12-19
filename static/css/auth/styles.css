@@ -1,0 +1,79 @@
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f9;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+.container {
+  display: flex;
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  max-width: 800px;
+  width: 100%;
+}
+.welcome {
+  flex: 1;
+  padding: 20px;
+  text-align: center;
+}
+.welcome h1 {
+  margin-bottom: 20px;
+}
+.auth {
+  flex: 1;
+  padding: 20px;
+  border-left: 1px solid #ddd;
+}
+.auth h2 {
+  text-align: center;
+}
+.auth .toggle-buttons {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+.auth .toggle-buttons button {
+  margin: 0 10px;
+  padding: 10px;
+  background-color: #007BFF;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.auth .toggle-buttons button:hover {
+  background-color: #0056b3;
+}
+.auth form {
+  display: none;
+  flex-direction: column;
+}
+.auth form.active {
+  display: flex;
+}
+.auth label {
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+.auth input {
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+.auth button.submit {
+  padding: 10px;
+  background-color: #007BFF;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.auth button.submit:hover {
+  background-color: #0056b3;
+}

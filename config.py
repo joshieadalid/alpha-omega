@@ -5,7 +5,7 @@ import os
 load_dotenv()
 
 class Config:
-    SECRET_KEY = os.getenv('SECRET_KEY', 'default-secret-key')
+    SECRET_KEY = os.getenv('SECRET_KEY', 'Prueba123')
     DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 'yes')
     HOST = os.getenv('HOST', '127.0.0.1')
     PORT = int(os.getenv('PORT', 3000))

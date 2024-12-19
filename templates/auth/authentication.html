@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to the System</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/auth/styles.css') }}">
+</head>
+<body>
+  <div class="container">
+    <div class="welcome">
+      <h1>Welcome to the System</h1>
+      <p>Manage your account efficiently with our system. Choose to log in or register to get started!</p>
+    </div>
+    <div class="auth">
+      <h2>Authentication</h2>
+      <div class="toggle-buttons">
+        <button id="show-login">Login</button>
+        <button id="show-register">Register</button>
+      </div>
+      <form id="login-form" class="active">
+        <label for="login-username">Username</label>
+        <input type="text" id="login-username" name="username" required>
+
+        <label for="login-password">Password</label>
+        <input type="password" id="login-password" name="password" required>
+
+        <button type="submit" class="submit">Login</button>
+      </form>
+      <form id="register-form">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" required>
+
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required>
+
+        <button type="submit" class="submit">Register</button>
+      </form>
+    </div>
+  </div>
+  <script src="{{ url_for('static', filename='js/auth/scripts.js') }}"></script>
+</body>
+</html>

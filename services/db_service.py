@@ -1,13 +1,23 @@
 import sqlite3
-from flask import g
 
-def get_database_connection():
-    if 'db' not in g:
-        g.db = sqlite3.connect('example.db')
-        g.db.row_factory = sqlite3.Row
-    return g.db
+DATABASE = 'app.db'
+
+def get_db():
+    """Conexión a la base de datos."""
+    conn = sqlite3.connect(DATABASE)
+    conn.row_factory = sqlite3.Row  # Acceso a columnas por nombre
+    return conn
 
 def close_database_connection(exception=None):
-    db = g.pop('db', None)
-    if db is not None:
-        db.close()
+    """Cierra la conexión a la base de datos."""
+    conn = getattr(exception, '_database', None)
+    if conn is not None:
+        conn.close()
+
+def init_db():
+    """Inicializa la base de datos con un esquema."""
+    conn = get_db()
+    with open('schema.sql', 'r') as f:
+        conn.executescript(f.read())
+    conn.commit()
+    conn.close()
