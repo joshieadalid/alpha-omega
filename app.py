@@ -1,5 +1,6 @@
 from flask import Flask
 
+from blueprints.audio_bp import audio_bp
 from blueprints.minutes_bp import minutes_bp
 from config import Config
 
@@ -30,7 +31,7 @@ def create_app():
     app.register_blueprint(modes_bp, url_prefix='/modes')
     app.register_blueprint(minutes_bp, url_prefix='/api')
     app.register_blueprint(elevenlabs_bp, url_prefix='/tts')  # Nuevo Blueprint
-
+    app.register_blueprint(audio_bp, url_prefix='/api')
     # Eventos de cierre para la base de datos
     app.teardown_appcontext(close_database_connection)
 
