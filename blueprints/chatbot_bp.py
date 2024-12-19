@@ -40,7 +40,7 @@ def _format_response(response):
 
 
 @chatbot_bp.route("/meeting", methods=["POST"])
-@jwt_required
+
 def chat_meeting():
     """Endpoint para manejar mensajes de texto."""
     user_message = request.get_json().get("message", "")
@@ -51,7 +51,6 @@ def chat_meeting():
 
 
 @chatbot_bp.route("/meeting_audio", methods=["POST"])
-@jwt_required
 def meeting_audio():
     """Endpoint para manejar archivos de audio."""
     if 'audio' not in request.files:
