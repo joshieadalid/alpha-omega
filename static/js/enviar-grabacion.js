@@ -39,7 +39,7 @@ async function sendAudioToServer(audioBlob) {
         } catch {
             const text = await response.text();
             console.log("Respuesta del servidor (texto):", text);
-            textToSpeechStream(text);
+            await textToSpeechStream(text);
             return `Respuesta: ${text}`;
         }
     } catch (error) {
@@ -85,7 +85,7 @@ async function textToSpeechStream(text) {
 
         // Reproducir el audio
         const audio = new Audio(audioURL);
-        audio.play();
+        await audio.play();
     } catch (error) {
         console.error("Error al generar o reproducir el audio:", error);
     }

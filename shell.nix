@@ -21,6 +21,8 @@ pkgs.mkShell {
         pyjwt
         # Base de datos
         flask-sqlalchemy
+        # TTS
+        elevenlabs
     ]))
   ];
 }
