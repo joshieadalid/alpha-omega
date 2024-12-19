@@ -39,6 +39,7 @@ async function sendAudioToServer(audioBlob) {
         } catch {
             const text = await response.text();
             console.log("Respuesta del servidor (texto):", text);
+            textToSpeechStream(text);
             return `Respuesta: ${text}`;
         }
     } catch (error) {
@@ -46,3 +47,4 @@ async function sendAudioToServer(audioBlob) {
         return `Error al enviar el audio: ${error.message}`;
     }
 }
+
