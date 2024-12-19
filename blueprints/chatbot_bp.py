@@ -2,7 +2,7 @@ from datetime import datetime
 
 import jsonpickle
 import openai
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, url_for
 from jira import JIRA
 from werkzeug.datastructures import FileStorage
 from flask import Blueprint, request, jsonify, current_app
@@ -12,6 +12,7 @@ from services.minute_service import MinuteService
 from services.openai_service import OpenAIService
 from services.script_executor import ScriptExecutor
 from services.elevenlabs_service import ElevenLabsService
+from services.audio_service import generate_audio
 # Crear Blueprint con prefijo '/chatbot'
 chatbot_bp = Blueprint('chatbot_route', __name__)
 
@@ -27,7 +28,7 @@ jira_client = JIRA(server=f"https://{Config.DOMAIN}.atlassian.net",
 openai_service = OpenAIService(openai_client=openai_client, model_type="gpt-4o-mini", )
 
 executor = ScriptExecutor(openai_service=openai_service, jira_client=jira_client)
-
+elevenlabs_service = ElevenLabsService(Config.ELEVENLABS_API_KEY)
 
 # Helper para formatear la respuesta
 def _format_response(response):
@@ -67,8 +68,11 @@ def minute():
     timestamp = datetime.now().strftime("%d de %B de %Y, %H:%M:%S")
     MinuteService.add_minute(timestamp, minute)
     formatted_response: str = _format_response(execution_result)
-    service=ElevenLabsService(Config.ELEVENLABS_API_KEY)
-
-    audio_stream, mimetype, headers = service.tts_to_mp3(formatted_response)
-
-    return jsonify({"reply": formatted_response, "minute": minute, "audio": current_app.response_class(audio_stream, mimetype=mimetype, headers=headers)}), 200
+    audio_stream, mimetype, headers = elevenlabs_service.tts_to_mp3(formatted_response)
+    audio_id = generate_audio(audio_stream,mimetype, headers)
+    audio_url = url_for('audio.download_audio', audio_id=audio_id, _external=True)
+    return jsonify({
+        "reply": formatted_response,
+        "minute": minute,
+        "audio_url": audio_url
+    }), 200
