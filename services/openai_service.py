@@ -132,7 +132,7 @@ class OpenAIService:
         user_instruction = {"role": "user",
             "content": f"Este es un JSON con la respuesta de una API tras una transacción. Por favor, analiza la respuesta y proporciona un resumen claro y breve que explique qué significa la respuesta y cuál es el estado o resultado de la transacción. Ignora detalles técnicos o atributos secundarios. Solo indica de manera comprensible qué ocurrió con la transacción (por ejemplo, si fue exitosa, fallida, pendiente, o algún detalle relevante). Aquí está el JSON: {api_json_response}."}
         try:
-            chat_response = self.openai_client.chat.completions.create(model=self.model_type,
+            chat_response = self.openai_client.chat.completions.create(model="gpt-4o",
                 # Puedes cambiar el modelo según sea necesario
                 messages=[system_prompt, user_instruction])
 

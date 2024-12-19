@@ -36,6 +36,7 @@ executor = ScriptExecutor(
 # Helper para formatear la respuesta
 def _format_response(response):
     json_data = jsonpickle.encode(response, unpicklable=False)
+    print(json_data)
     return openai_service.format_api_response(json_data)
 
 

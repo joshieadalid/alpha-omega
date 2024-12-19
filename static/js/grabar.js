@@ -1,4 +1,3 @@
-
 let mediaRecorder;
 let audioChunks = [];
 let isPaused = false; // Estado de pausa
@@ -103,3 +102,4 @@ function resetButtons() {
     stopButton.disabled = true;
     cancelButton.disabled = true;
 }
+
