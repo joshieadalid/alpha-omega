@@ -13,7 +13,7 @@ class ElevenLabsService:
         """
         response = self.client.text_to_speech.convert(
             voice_id="SvU0B5XIX9vlVyFfY2Kc",  # Adam pre-made voice
-            optimize_streaming_latency="0",
+            optimize_streaming_latency="2",
             output_format="mp3_22050_32",
             text=text,
             model_id="eleven_multilingual_v2",

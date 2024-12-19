@@ -1,5 +1,5 @@
 { pkgs, ... }: {
-  channel = "stable-24.05";
+  channel = "stable-24.11";
 
   packages = [
     (pkgs.python312.withPackages (python-pkgs: with python-pkgs; [
@@ -15,7 +15,7 @@
       jsonpickle
       pyjwt
       flask-sqlalchemy
-
+      elevenlabs
     ]))
     pkgs.openssh
   ];
