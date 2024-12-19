@@ -1,6 +1,5 @@
 from database import connect
 
-
 def insert_minute(content):
     conn = connect()
     cursor = conn.cursor()

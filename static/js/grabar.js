@@ -1,3 +1,5 @@
+import { sendAudioToServer } from './enviar-grabacion.js';
+
 let mediaRecorder;
 let audioChunks = [];
 let isPaused = false; // Estado de pausa

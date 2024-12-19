@@ -1,6 +1,3 @@
-import { ElevenLabsClient } from "elevenlabs";
-
-
 async function textToSpeechStream(text) {
     const client = new ElevenLabsClient({ apiKey: 'ELEVENLABS_API_KEY' });
     const voiceId = 'SvU0B5XIX9vlVyFfY2Kc'; // ID de voz de Idalia
