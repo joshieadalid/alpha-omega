@@ -1,4 +1,3 @@
-import { sendAudioToServer } from './enviar-grabacion.js';
 
 let mediaRecorder;
 let audioChunks = [];

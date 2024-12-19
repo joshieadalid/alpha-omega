@@ -40,6 +40,7 @@ async function textToSpeechStream(text) {
         console.error("Error al generar o reproducir el audio:", error);
     }
 }
+
 // const voiceId = 'w56kEoqD0CoEldmNCYKE'; // ID de voz de Farid Dieck
     // const voiceId = 'wJqPPQ618aTW29mptyoc'; // ID de voz de Ana 
     // const voiceId = 'LcfcDJNUP1GQjkzn1xUU'; // ID de voz de Emily
