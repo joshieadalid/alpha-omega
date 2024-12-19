@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTTP POST Request</title>
+    <script>
+        async function sendRequest() {
+            const messageInput = document.getElementById("messageInput");
+            const labelResponse = document.getElementById("labelResponse");
+            const audioPlayer = document.getElementById("audioPlayer");
+
+            const message = messageInput.value;
+
+            if (!message) {
+                alert("Por favor ingresa un mensaje.");
+                return;
+            }
+
+            try {
+                const response = await fetch("http://127.0.0.1:3000/api/minutes_text", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ message })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error del servidor: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                labelResponse.innerText = `Respuesta: ${data.reply}\nMinuta: ${data.minute}`;
+
+                if (data.audio_url) {
+                    // Descarga y reproduce el audio
+                    audioPlayer.src = data.audio_url;
+                    audioPlayer.play();
+                } else {
+                    console.warn("No se encontró el enlace de audio en la respuesta.");
+                }
+            } catch (error) {
+                console.error("Error al enviar la petición:", error);
+                alert("Ocurrió un error al procesar tu solicitud.");
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Enviar Petición HTTP</h1>
+    <label for="messageInput">Mensaje:</label>
+    <input type="text" id="messageInput" placeholder="Escribe tu mensaje aquí...">
+    <button onclick="sendRequest()">Enviar</button>
+
+    <h2>Respuesta del servidor</h2>
+    <label id="labelResponse">Aquí aparecerá la respuesta.</label>
+
+    <h2>Audio</h2>
+    <audio id="audioPlayer" controls></audio>
+</body>
+</html>
