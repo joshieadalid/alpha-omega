@@ -14,6 +14,8 @@
       bcrypt
       jsonpickle
       pyjwt
+      flask-sqlalchemy
+
     ]))
     pkgs.openssh
   ];

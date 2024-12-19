@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify
+from datetime import datetime
 from services.minute_service import MinuteService
 
 minutes_bp = Blueprint('minutes_bp', __name__)
@@ -15,7 +16,7 @@ def get_minutes():
 @minutes_bp.route("/minutes", methods=["POST"])
 def add_minute():
     # Datos simulados; sustituye por datos del cliente
-    timestamp = "2024-12-18T13:00:00"
+    timestamp = get_current_datetime_iso()
     text = "Minuta de ejemplo"
     new_minute = MinuteService.add_minute(timestamp, text)
     return jsonify({
