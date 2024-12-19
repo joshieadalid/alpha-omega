@@ -1,5 +1,6 @@
 from flask import Flask
 
+from blueprints.minutes_bp import minutes_bp
 from config import Config
 
 # Blueprints
@@ -11,6 +12,7 @@ from blueprints.modes_bp import modes_bp
 # Servicios
 from services.db_service import init_db, close_database_connection
 
+
 def create_app():
     app = Flask(__name__)
 
@@ -19,13 +21,15 @@ def create_app():
 
     # Inicializar base de datos
     with app.app_context():
-        init_db()
+        init_db(app)
 
     # Registrar rutas (blueprints)
     app.register_blueprint(root_bp)
     app.register_blueprint(chatbot_bp, url_prefix='/api')
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(modes_bp, url_prefix='/modes')
+    app.register_blueprint(minutes_bp, url_prefix='/api')
+
 
     # Eventos de cierre para la base de datos
     app.teardown_appcontext(close_database_connection)

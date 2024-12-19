@@ -19,6 +19,8 @@ pkgs.mkShell {
         jsonpickle
         # Flask
         pyjwt
+        # Base de datos
+        flask-sqlalchemy
     ]))
   ];
 }

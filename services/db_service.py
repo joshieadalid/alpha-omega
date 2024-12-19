@@ -1,23 +1,12 @@
-import sqlite3
+from flask_sqlalchemy import SQLAlchemy
 
-DATABASE = 'app.db'
+db = SQLAlchemy()
 
-def get_db():
-    """Conexión a la base de datos."""
-    conn = sqlite3.connect(DATABASE)
-    conn.row_factory = sqlite3.Row  # Acceso a columnas por nombre
-    return conn
+def init_db(app):
+    db.init_app(app)
+    with app.app_context():
+        from services.minute_service import Minute  # Importa el modelo
+        db.create_all()
 
 def close_database_connection(exception=None):
-    """Cierra la conexión a la base de datos."""
-    conn = getattr(exception, '_database', None)
-    if conn is not None:
-        conn.close()
-
-def init_db():
-    """Inicializa la base de datos con un esquema."""
-    conn = get_db()
-    with open('schema.sql', 'r') as f:
-        conn.executescript(f.read())
-    conn.commit()
-    conn.close()
+    db.session.remove()

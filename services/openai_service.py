@@ -4,7 +4,6 @@ import json
 
 from werkzeug.datastructures import FileStorage
 
-
 class OpenAIService:
     """Servicio que interactúa con la API de OpenAI."""
 
@@ -75,7 +74,7 @@ class OpenAIService:
         prompt = {"role": "system", "content": """
                 Eres un asistente experto en generar código Python para interactuar con la API del cliente de Jira.
                 El objeto que se utilizará para gestionar la conexión con la API es:
-                    jira = JiraClient()
+                    jira, una instancia de JIRA, ya inicializada
                 **No necesitas importar el cliente.**
     
                 ### Detalles importantes:
@@ -139,5 +138,82 @@ class OpenAIService:
 
             formated_text = chat_response.choices[0].message.content.strip()
             return formated_text  # Devolver el texto generado
+        except Exception as e:
+            raise Exception(f"Error al generar el script: {e}")
+
+    def generate_minute(self, text: str, timestamp) -> str:
+        """
+        Genera una minuta con el texto de la reunión.
+        """
+        prompt = {"role": "system", "content": """
+                Eres un redactor experto en redactar minutas empresariales de la metodología de Scrum.
+                """}
+
+        user_message = {"role": "user",
+                        "content": f"""Redacta la minuta para el día {timestamp} acerca de lo que se habló en esta reunión.
+                        1. Detalles básicos
+
+    Fecha de la reunión.
+    Hora de inicio y fin.
+    Participantes (nombres y roles en el equipo: Scrum Master, Product Owner, Developers).
+
+2. Objetivo de la reunión
+
+    Tipo de reunión (Daily Scrum, Sprint Planning, Sprint Review, Sprint Retrospective).
+    Propósito o metas específicas.
+
+3. Resumen del progreso
+
+    Daily Scrum:
+        Qué se completó desde la última reunión.
+        Qué se planea completar antes de la próxima reunión.
+        Impedimentos o bloqueos.
+    Sprint Planning:
+        Historias de usuario seleccionadas del backlog.
+        Objetivo del sprint.
+        Tareas asignadas.
+    Sprint Review:
+        Trabajo completado y no completado.
+        Feedback del Product Owner y/o stakeholders.
+    Sprint Retrospective:
+        Qué funcionó bien.
+        Qué no funcionó.
+        Acciones de mejora.
+
+4. Decisiones importantes
+
+    Cambios en prioridades.
+    Soluciones a problemas discutidos.
+    Compromisos o acuerdos.
+
+5. Impedimentos y bloqueos
+
+    Problemas no resueltos que afectan al equipo.
+    Quién es responsable de resolverlos.
+
+6. Próximos pasos
+
+    Acciones asignadas con responsables y fechas límite.
+    Planes específicos para la próxima reunión o sprint.
+
+7. Notas adicionales
+
+    Comentarios o temas fuera del alcance que requieran seguimiento posterior.
+    Observaciones relevantes sobre el equipo o el proceso.
+
+Mantén la minuta clara y concisa, evitando detalles irrelevantes. Su propósito principal es servir como referencia para el equipo y garantizar que todos estén alineados.
+
+                        A continuación, la transcripción:
+{text}."""}
+
+        try:
+            # Generar el script con la API de OpenAI
+            response = self.openai_client.chat.completions.create(model=self.model_type,
+                                                                  # Puedes cambiar el modelo según sea necesario
+                                                                  messages=[prompt, user_message])
+            # Obtener el código generado
+            generated_script = response.choices[0].message.content.strip()
+            return generated_script  # Devolver el código generado
+
         except Exception as e:
             raise Exception(f"Error al generar el script: {e}")

@@ -24,7 +24,7 @@ jira_client = JIRA(
 # Inicialización de servicios
 openai_service = OpenAIService(
     openai_client=openai_client,
-    model_type="gpt-4o-mini",
+    model_type="gpt-4o",
 )
 
 executor = ScriptExecutor(
@@ -61,3 +61,37 @@ def meeting_audio():
     response = executor.execute_prompt_script(transcription)
     formatted_response = _format_response(response)
     return jsonify({"reply": formatted_response}), 200
+
+from datetime import datetime
+@chatbot_bp.route("/minutes_text", methods=["POST"])
+def minute():
+    user_message = request.get_json().get("message", "")
+    print("User message:", user_message)
+    response:str = executor.execute_prompt_script(user_message)
+    minute: str = openai_service.generate_minute(user_message, datetime.now().strftime("%d de %B de %Y, %H:%M:%S"))
+    formatted_response:str = _format_response(response)
+    return jsonify({"reply": formatted_response, "minute": minute}), 200
+
+# /api/minutes
+# Ruta para obtener todas las minutas
+@chatbot_bp.route("/api/minutes", methods=["GET"])
+def get_minutes():
+    minutes = MinuteService.get_all_minutes()
+    return jsonify({
+        "reply": [
+            {"timestamp": minute.timestamp, "text": minute.text} for minute in minutes
+        ]
+    })
+
+
+# Ruta para agregar una nueva minuta (ejemplo)
+@chatbot_bp.route("/api/minutes", methods=["POST"])
+def add_minute():
+    # Simula datos para agregar
+    timestamp = "2024-12-18T12:00:00"
+    text = "Nueva minuta de prueba"
+    new_minute = MinuteService.add_minute(timestamp, text)
+    return jsonify({
+        "message": "Minuta agregada exitosamente",
+        "minute": {"timestamp": new_minute.timestamp, "text": new_minute.text}
+    })
