@@ -1,8 +1,7 @@
-# services/openai_service.py
 import io
-import json
 
 from werkzeug.datastructures import FileStorage
+
 
 class OpenAIService:
     """Servicio que interactúa con la API de OpenAI."""
@@ -34,21 +33,26 @@ class OpenAIService:
         except Exception as e:
             raise Exception(f"Error al transcribir el archivo: {str(e)}")
 
-    def extract_json(self, text):
-        try:
-            start_index = text.find("```json") + len("```json")
-            end_index = text.find("```", start_index)
-            json_string = text[start_index:end_index].strip()
-            return json.loads(json_string)
-        except Exception as error:
-            return {"error": str(error)}
+    @staticmethod
+    def extract_code(text, language):
+        """
+        Extracts a code block for a specified language from a given text.
 
-    def extract_python(self, text):
+        Parameters:
+            text (str): The text containing the code block.
+            language (str): The programming language of the code block (e.g., 'python', 'html', etc.).
+
+        Returns:
+            str: The extracted code block or an error message if extraction fails.
+        """
         try:
-            start_index = text.find("```python") + len("```python")
+            start_marker = f"```{language}"
+            start_index = text.find(start_marker) + len(start_marker)
             end_index = text.find("```", start_index)
-            python_code = text[start_index:end_index].strip()
-            return python_code
+            if start_index == -1 or end_index == -1:
+                raise ValueError(f"No code block found for language '{language}'.")
+            code_block = text[start_index:end_index].strip()
+            return code_block
         except Exception as error:
             return {"error": str(error)}
 
@@ -56,24 +60,12 @@ class OpenAIService:
         """
         Genera un script Python a partir del texto proporcionado y lo devuelve como código.
         """
-        # prompt = {
-        #    "role": "system",
-        #    "content": """Eres un asistente experto en generar código Python que interactúe con la API de la biblioteca del cliente de Jira.
-        #        El objeto que gestionará la conexión con la API es:
-        #        jira = JiraClient()
-        #        - No necesitas importar el cliente.
-        #        create_project no necesita summary. Solo el key y el name.
-        #        - Si necesitas usar create_issue(fields: dict[str, Any] | None = None, prefetch: bool = True, **fieldargs) → Issue.
-        #        - fields es un objeto, con atributos project, summary, description, issuetype, project es un objeto con atributo key. issuetype es un objeto con atributo name.
-        #        - create_issue no las asigna automáticamente, para eso necesitas assign_issue:  assign_issue(issue: int | str, assignee: str | None) → bool[source]
-        #        - El resultado final lo guardarás en la variable result.
-        #        - Para listar todos los usuarios, el query debe tener un espacio.
-        #        - Para borrar un issue primero obtenlo y aplícale delete, por ejemplo: jira.issue('ISSUE_KEY').delete())
-        #        """
-        # }
+
         prompt = {"role": "system", "content": """
                 Eres un asistente experto en generar código Python para interactuar con la API del cliente de Jira.
                 El objeto que se utilizará para gestionar la conexión con la API es:
+                
+                Gestiona las excepciones de forma que aunque un fragmento del código haya fallado, pueda seguir con lo demás. El objetivo es tener la variable `result`.
                     jira, una instancia de JIRA, ya inicializada
                 **No necesitas importar el cliente.**
     
@@ -87,7 +79,7 @@ class OpenAIService:
                     - project: Un objeto con el atributo key.
                     - summary: Un resumen breve del issue.
                     - description: Una descripción detallada del issue.
-                    - issuetype: Un objeto con el atributo name que define el tipo de issue.
+                    - issuetype: Un objeto con el atributo `name` que define el tipo de issue como 'Bug', 'Story', 'Task', entre otros.
                 - Nota: create_issue no asigna automáticamente los issues. Para ello, utiliza el método assign_issue.
     
                 3. **Asignación de issues:**
@@ -107,7 +99,7 @@ class OpenAIService:
                 """}
 
         user_message = {"role": "user",
-            "content": f"""Genera el código Python necesario para ejecutar las acciones a partir del siguiente texto: '{text}'
+                        "content": f"""Genera el código Python necesario para ejecutar las acciones a partir del siguiente texto: '{text}'
                  **Estructura esperada:**
                     - Asegúrate de que el código sea funcional y siga las reglas de interacción con la API del cliente de Jira.
                      - Todos los resultados deben almacenarse en una variable llamada result."""}
@@ -115,8 +107,8 @@ class OpenAIService:
         try:
             # Generar el script con la API de OpenAI
             response = self.openai_client.chat.completions.create(model=self.model_type,
-                # Puedes cambiar el modelo según sea necesario
-                messages=[prompt, user_message])
+                                                                  # Puedes cambiar el modelo según sea necesario
+                                                                  messages=[prompt, user_message])
 
             # Obtener el código generado
             generated_script = response.choices[0].message.content.strip()
@@ -127,21 +119,21 @@ class OpenAIService:
 
     def format_api_response(self, api_json_response: str) -> str:
         system_prompt = {"role": "system",
-            "content": """Traduce las respuestas en formato JSON provenientes de la API REST de Jira a un formato de texto plano y no markdown, comprensible para cualquier persona, explicando los datos relevantes de manera clara y estructurada, omitiendo detalles técnicos innecesarios. Debe ser al estilo de mensaje de debug, impersonal. Como si un sistema estuviera informando acerca de lo ocurrido. Solo mencionas los datos, sin interpretarlos."""}
+                         "content": """Traduce las respuestas en formato JSON provenientes de la API REST de Jira a un formato de texto plano y no markdown, comprensible para cualquier persona, explicando los datos relevantes de manera clara y estructurada, omitiendo detalles técnicos innecesarios. Debe ser al estilo de mensaje de debug, impersonal. Como si un sistema estuviera informando acerca de lo ocurrido. Solo mencionas los datos, sin interpretarlos."""}
 
         user_instruction = {"role": "user",
-            "content": f"Este es un JSON con la respuesta de una API tras una transacción. Por favor, analiza la respuesta y proporciona un resumen claro y breve que explique qué significa la respuesta y cuál es el estado o resultado de la transacción. Ignora detalles técnicos o atributos secundarios. Solo indica de manera comprensible qué ocurrió con la transacción (por ejemplo, si fue exitosa, fallida, pendiente, o algún detalle relevante). Aquí está el JSON: {api_json_response}."}
+                            "content": f"Este es un JSON con la respuesta de una API tras una transacción. Por favor, analiza la respuesta y proporciona un resumen claro y breve que explique qué significa la respuesta y cuál es el estado o resultado de la transacción. Ignora detalles técnicos o atributos secundarios. Solo indica de manera comprensible qué ocurrió con la transacción (por ejemplo, si fue exitosa, fallida, pendiente, o algún detalle relevante). Aquí está el JSON: {api_json_response}."}
         try:
             chat_response = self.openai_client.chat.completions.create(model=self.model_type,
-                # Puedes cambiar el modelo según sea necesario
-                messages=[system_prompt, user_instruction])
+                                                                       # Puedes cambiar el modelo según sea necesario
+                                                                       messages=[system_prompt, user_instruction])
 
             formated_text = chat_response.choices[0].message.content.strip()
             return formated_text  # Devolver el texto generado
         except Exception as e:
             raise Exception(f"Error al generar el script: {e}")
 
-    def generate_minute(self, text: str, timestamp) -> str:
+    def minute_text(self, text: str, timestamp) -> str:
         """
         Genera una minuta con el texto de la reunión.
         """
@@ -149,8 +141,7 @@ class OpenAIService:
                 Eres un redactor experto en redactar minutas empresariales de la metodología de Scrum.
                 """}
 
-        user_message = {"role": "user",
-                        "content": f"""Redacta la minuta para el día {timestamp} acerca de lo que se habló en esta reunión.
+        user_message = {"role": "user", "content": f"""Redacta la minuta para el día {timestamp} acerca de lo que se habló en esta reunión.
                         1. Detalles básicos
 
     Fecha de la reunión.
@@ -217,3 +208,18 @@ Mantén la minuta clara y concisa, evitando detalles irrelevantes. Su propósito
 
         except Exception as e:
             raise Exception(f"Error al generar el script: {e}")
+
+    def minute_to_html(self, text: str) -> str:
+        prompt = {"role": "system",
+                  "content": f"Eres un sistema que genera un reporte de HTML semántico y con CSS BEM incrustado en el mismo archivo; para una minuta en texto plano."}
+
+        user_message = {"role": "user", "content": f"Genera el reporte para la siguiente minuta: {text}"}
+
+        try:
+            response = self.openai_client.chat.completions.create(model='gpt-4o-mini',
+                                                                  messages=[prompt, user_message]).choices[
+                0].message.content.strip()
+            html_code = self.extract_code(text=response, language='html')
+            return html_code
+        except Exception as e:
+            raise Exception(f'Error al formatear la minuta en HTML.')

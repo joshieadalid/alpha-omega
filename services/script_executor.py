@@ -1,4 +1,8 @@
+from injector import inject
+
+
 class ScriptExecutor:
+    @inject
     def __init__(self, openai_service, jira_client):
         """
         Inicializa el ejecutor con los clientes necesarios.
@@ -20,7 +24,7 @@ class ScriptExecutor:
         """
         # Generar el script a partir del servicio OpenAI
         script: str = self.openai_service.generate_script(prompt)
-        python_script: str = self.openai_service.extract_python(script)
+        python_script: str = self.openai_service.extract_code(script, language='python')
 
         print(f"""Script a ejecutar:
         ------------------
