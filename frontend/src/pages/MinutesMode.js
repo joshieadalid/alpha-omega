@@ -1,56 +1,77 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  startRecording,
-  pauseOrResumeRecording,
-  stopRecording,
-  cancelRecording,
-} from "../utils/audio-utils";
 
 function AudioRecorder() {
-  const [isRecording, setIsRecording] = useState(false); // Estado para grabación
-  const [isPaused, setIsPaused] = useState(false); // Estado para pausa
-  const [response, setResponse] = useState("Aquí aparecerán los resultados."); // Estado para mostrar resultados
+  const [message, setMessage] = useState(""); // Estado para el mensaje del usuario
+  const [response, setResponse] = useState(""); // Estado para la respuesta del servidor
   const [audioSrc, setAudioSrc] = useState(""); // Estado para la URL del audio
+  const [isRecording, setIsRecording] = useState(false); // Estado para grabación
+  const [mediaRecorder, setMediaRecorder] = useState(null); // Estado para el MediaRecorder
+  const [audioChunks, setAudioChunks] = useState([]); // Fragmentos de audio
   const navigate = useNavigate();
 
   const handleStartRecording = async () => {
-    setIsRecording(true);
-    setIsPaused(false);
-    setAudioSrc(""); // Limpiar cualquier audio previo
-    await startRecording(setResponse);
-  };
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      setMediaRecorder(recorder);
+      setAudioChunks([]);
+      setIsRecording(true);
+      setAudioSrc("");
 
-  const handlePauseOrResumeRecording = () => {
-    pauseOrResumeRecording(setResponse);
-    setIsPaused((prev) => !prev);
+      recorder.ondataavailable = (event) => {
+        setAudioChunks((prevChunks) => [...prevChunks, event.data]);
+      };
+
+      recorder.start();
+    } catch (error) {
+      console.error("Error al iniciar la grabación:", error);
+      setResponse("Error al iniciar la grabación.");
+    }
   };
 
   const handleStopRecording = async () => {
-    setIsRecording(false);
-    setIsPaused(false);
-    stopRecording(async (serverResponse) => {
-      setResponse(serverResponse);
-      const audioURL = await extractAudioURLFromResponse(serverResponse);
-      if (audioURL) setAudioSrc(audioURL);
-    });
+    if (mediaRecorder) {
+      mediaRecorder.stop();
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunks, { type: "audio/ogg" });
+        const formData = new FormData();
+        formData.append("audio", audioBlob, "audio-recording.ogg");
+
+        try {
+          const response = await fetch("http://localhost:8080/api/minutes/audio", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!response.ok) {
+            throw new Error(`Error del servidor: ${response.status}`);
+          }
+
+          const data = await response.json();
+          setResponse(data.reply || "Respuesta recibida.");
+          if (data.audio_url) {
+            setAudioSrc(data.audio_url);
+          } else {
+            setResponse("No se encontró un enlace de audio en la respuesta.");
+          }
+        } catch (error) {
+          console.error("Error al enviar el audio:", error);
+          setResponse("Error al enviar el audio al servidor.");
+        } finally {
+          setIsRecording(false);
+        }
+      };
+    }
   };
 
   const handleCancelRecording = () => {
-    setIsRecording(false);
-    setIsPaused(false);
-    cancelRecording(setResponse);
-    setAudioSrc(""); // Limpiar cualquier audio previo
-  };
-
-  const extractAudioURLFromResponse = (serverResponse) => {
-    try {
-      // Ajusta esta lógica según la estructura real de la respuesta del servidor
-      const responseJSON = JSON.parse(serverResponse);
-      return responseJSON.audio_url || "";
-    } catch (error) {
-      console.warn("No se pudo parsear la respuesta como JSON:", error);
-      return "";
+    if (mediaRecorder) {
+      mediaRecorder.stream.getTracks().forEach((track) => track.stop());
+      setMediaRecorder(null);
+      setAudioChunks([]);
+      setIsRecording(false);
+      setResponse("Grabación cancelada.");
     }
   };
 
@@ -61,52 +82,47 @@ function AudioRecorder() {
       </header>
 
       <main className="flex-1 flex flex-col items-center justify-center p-6">
+        <textarea
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder="Escribe tu mensaje aquí..."
+          className="w-full max-w-md p-4 border border-gray-300 rounded-md mb-4"
+        ></textarea>
+
         {/* Botones de grabación */}
         <div className="flex flex-col gap-4">
           <button
-            className={`py-3 px-4 rounded-md font-semibold transition ${
+            onClick={handleStartRecording}
+            disabled={isRecording}
+            className={`py-3 px-4 rounded-md font-semibold ${
               isRecording
                 ? "bg-gray-400 cursor-not-allowed"
                 : "bg-blue-800 text-white hover:bg-blue-700"
             }`}
-            onClick={handleStartRecording}
-            disabled={isRecording}
           >
             Iniciar Grabación
           </button>
 
           <button
-            className={`py-3 px-4 rounded-md font-semibold transition ${
-              isRecording
-                ? "bg-yellow-600 text-white hover:bg-yellow-500"
-                : "bg-gray-400 cursor-not-allowed"
-            }`}
-            onClick={handlePauseOrResumeRecording}
+            onClick={handleStopRecording}
             disabled={!isRecording}
-          >
-            {isPaused ? "Reanudar Grabación" : "Pausar Grabación"}
-          </button>
-
-          <button
-            className={`py-3 px-4 rounded-md font-semibold transition ${
+            className={`py-3 px-4 rounded-md font-semibold ${
               isRecording
                 ? "bg-green-600 text-white hover:bg-green-500"
                 : "bg-gray-400 cursor-not-allowed"
             }`}
-            onClick={handleStopRecording}
-            disabled={!isRecording}
           >
             Detener y Enviar
           </button>
 
           <button
-            className={`py-3 px-4 rounded-md font-semibold transition border ${
-              isRecording
-                ? "border-red-600 text-red-600 hover:bg-red-600 hover:text-white"
-                : "border-gray-400 text-gray-400 cursor-not-allowed"
-            }`}
             onClick={handleCancelRecording}
             disabled={!isRecording}
+            className={`py-3 px-4 rounded-md font-semibold ${
+              isRecording
+                ? "bg-red-600 text-white hover:bg-red-500"
+                : "bg-gray-400 cursor-not-allowed"
+            }`}
           >
             Cancelar
           </button>
@@ -114,25 +130,18 @@ function AudioRecorder() {
 
         {/* Respuesta del servidor */}
         <div className="mt-6 bg-gray-100 text-blue-800 p-4 rounded-md text-center w-full max-w-md">
-          {response}
+          {response || "Aquí aparecerá la respuesta del servidor."}
         </div>
 
         {/* Reproductor de audio */}
-        {audioSrc ? (
+        {audioSrc && (
           <div className="mt-6 w-full max-w-md">
             <h2 className="font-semibold text-blue-800">Reproducir Audio</h2>
-            <audio
-              src={audioSrc}
-              controls
-              className="w-full mt-2 border border-gray-300 rounded-md"
-            />
+            <audio src={audioSrc} controls autoPlay className="w-full mt-2" />
           </div>
-        ) : (
-          <p className="mt-6 text-gray-500">No hay audio disponible.</p>
         )}
       </main>
 
-      {/* Botón de regreso al menú principal */}
       <footer className="p-4 flex justify-center items-center">
         <button
           onClick={() => navigate("/menu")}

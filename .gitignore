@@ -1,3 +1,6 @@
 .env
 __pycache__
 app.db
+/frontend/node_modules/
+/frontend/build/
+/.venv/
