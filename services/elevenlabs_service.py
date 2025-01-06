@@ -12,7 +12,9 @@ class ElevenLabsService:
         Convierte texto a audio y devuelve un flujo de bytes con su mimetype y headers.
         """
         response = self.client.text_to_speech.convert(
-            voice_id="SvU0B5XIX9vlVyFfY2Kc",  # Adam pre-made voice
+            # voice_id="wJqPPQ618aTW29mptyoc", # Mujer
+            # voice_id="JBFqnCBsd6RMkjVDRZzb", # Hombre
+            voice_id="SvU0B5XIX9vlVyFfY2Kc",  # Idalia
             optimize_streaming_latency="0",
             output_format="mp3_22050_32",
             text=text,
