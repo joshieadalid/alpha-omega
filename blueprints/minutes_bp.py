@@ -85,7 +85,7 @@ def minute_audio(executor: ScriptExecutor, openai_service: OpenAIService, eleven
     audio_file: FileStorage = request.files['audio']
     transcription = openai_service.transcribe_audio(audio_file)
     response = executor.execute_prompt_script(transcription)
-    timestamp = datetime.now().strftime("%d de %B de %Y, %H:%M:%S")
+    timestamp: datetime = datetime.now()
     minute_text: str = openai_service.minute_text(transcription, timestamp)
     minute: Minute = Minute.add(timestamp, minute_text)  # Resultado almacenado
 
