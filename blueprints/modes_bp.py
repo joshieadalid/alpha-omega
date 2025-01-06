@@ -1,5 +1,4 @@
 from flask import Blueprint, render_template
-from utils.auth import jwt_required
 
 modes_bp = Blueprint('modes', __name__)
 

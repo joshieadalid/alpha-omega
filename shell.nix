@@ -40,6 +40,11 @@ pkgs.mkShell {
         elevenlabs
         # Reportes
         weasyprint
+
+        # login-server
+        flask-bcrypt
+        flask-cors
     ]))
+    pkgs.nodejs
   ];
 }

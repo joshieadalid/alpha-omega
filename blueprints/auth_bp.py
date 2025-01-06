@@ -1,10 +1,14 @@
-from flask import Blueprint, request, jsonify, current_app
-import jwt
 from datetime import datetime, timedelta, timezone
+
+import jwt
+from flask import Blueprint, request, jsonify, current_app
 from werkzeug.security import generate_password_hash, check_password_hash
-from services.db_service import init_db
+
+from models.user import User
+from services.database_manager import db_manager
 
 auth_bp = Blueprint('auth', __name__)
+
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
@@ -12,21 +16,23 @@ def register():
     username = data.get('username')
     password = data.get('password')
 
+    # Validación de datos
     if not username or not password:
         return jsonify({'error': 'Missing username or password'}), 400
 
+    # Hash de contraseña
     hashed_password = generate_password_hash(password)
-    db = get_db()
 
+    # Crear usuario
     try:
-        db.execute(
-            "INSERT INTO users (username, password) VALUES (?, ?)",
-            (username, hashed_password)
-        )
-        db.commit()
+        new_user = User(username=username, password=hashed_password)
+        db_manager.session.add(new_user)
+        db_manager.session.commit()
         return jsonify({'message': 'User registered successfully!'}), 201
     except Exception as e:
-        return jsonify({'error': str(e)}), 400
+        db_manager.session.rollback()  # Revertir cambios en caso de error
+        return jsonify({'error': f'Error registering user: {str(e)}'}), 400
+
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
@@ -34,22 +40,17 @@ def login():
     username = data.get('username')
     password = data.get('password')
 
+    # Validación de datos
     if not username or not password:
         return jsonify({'error': 'Missing username or password'}), 400
 
-    db = get_db()
-    user = db.execute(
-        "SELECT * FROM users WHERE username = ?", (username,)
-    ).fetchone()
+    # Buscar usuario en la base de datos
+    user = User.query.filter_by(username=username).first()
 
-    if user and check_password_hash(user['password'], password):
+    # Verificar contraseña
+    if user and check_password_hash(user.password, password):
         token = jwt.encode(
-            {
-                'username': username,
-                'exp': datetime.now(timezone.utc) + timedelta(hours=1)
-            },
-            current_app.config['SECRET_KEY'],
-            algorithm='HS256'
-        )
-        return jsonify({'token': token})
-    return jsonify({'message': 'Invalid username or password'}), 401
+            {'id': user.id, 'username': user.username, 'exp': datetime.now(timezone.utc) + timedelta(hours=1)},
+            current_app.config['SECRET_KEY'], algorithm='HS256')
+        return jsonify({'token': token}), 200
+    return jsonify({'error': 'Invalid username or password'}), 401

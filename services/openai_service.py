@@ -222,4 +222,4 @@ Mantén la minuta clara y concisa, evitando detalles irrelevantes. Su propósito
             html_code = self.extract_code(text=response, language='html')
             return html_code
         except Exception as e:
-            raise Exception(f'Error al formatear la minuta en HTML.')
+            raise Exception(f'Error al formatear la minuta en HTML: {e}')

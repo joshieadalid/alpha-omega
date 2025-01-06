@@ -1,3 +1,5 @@
+from typing import Any
+
 from injector import inject
 
 
@@ -16,7 +18,7 @@ class ScriptExecutor:
             'result': None,  # Espacio para almacenar el resultado de ejecución
         }
 
-    def execute_prompt_script(self, prompt: str) -> any:
+    def execute_prompt_script(self, prompt: str) -> Any:
         """
         Genera y ejecuta un script basado en el prompt dado, devolviendo el resultado.
         :param prompt: Texto que describe el script a generar.

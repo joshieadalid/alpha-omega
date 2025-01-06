@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <title>Modo Reunión</title>
     <style>
         /* Estilo inspirado en el menú */
@@ -110,41 +110,246 @@
     </style>
 </head>
 <body>
-    <!-- Encabezado -->
-    <header>Modo Reunión</header>
+<!-- Encabezado -->
+<header>Modo Reunión</header>
 
-    <!-- Contenido Principal -->
-    <main>
-        <section class="button-group">
-            <button id="controlButton" onclick="startRecording()" class="start-button">
-                Iniciar Grabación
-            </button>
-            <button id="stopButton" onclick="stopRecording()" class="stop-button" disabled>
-                Detener y Enviar
-            </button>
-            <button id="cancelButton" onclick="cancelRecording()" class="cancel-button" disabled>
-                Cancelar
-            </button>
-        </section>
-        <div id="responseOutput" class="response-output" role="status">
-            Aquí aparecerán los resultados.
-        </div>
-    </main>
+<!-- Contenido Principal -->
+<main>
+    <section class="button-group">
+        <button class="start-button" id="controlButton" onclick="startRecording()">
+            Iniciar Grabación
+        </button>
+        <button class="stop-button" disabled id="stopButton" onclick="stopRecording()">
+            Detener y Enviar
+        </button>
+        <button class="cancel-button" disabled id="cancelButton" onclick="cancelRecording()">
+            Cancelar
+        </button>
+    </section>
+    <div class="response-output" id="responseOutput" role="status">
+        Aquí aparecerán los resultados.
+    </div>
+</main>
 
-    <!-- Pie de página -->
-    <footer>
-        <p>&copy; 2024 Alphaomega. Todos los derechos reservados.</p>
-         <!-- Enlace al menú principal con ícono -->
-        <a href="{{ url_for('auth.login') }}" class="flex items-center justify-center gap-2 text-blue-400 hover:underline">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-            Volver al Menú Principal
-        </a>
-    </footer>
+<!-- Pie de página -->
+<footer>
+    <p>&copy; 2024 Alphaomega. Todos los derechos reservados.</p>
+    <!-- Enlace al menú principal con ícono
+   <a href=" url_for('auth.login') " class="flex items-center justify-center gap-2 text-blue-400 hover:underline">
+       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+       </svg>
+       Volver al Menú Principal
+   </a>
+   -->
+</footer>
 
-    <!-- Scripts -->
-    <script src="{{ url_for('static', filename='js/enviar-grabacion.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/grabar.js') }}"></script>
+<!-- Scripts -->
+
+<script src="url_for('static', filename='js/enviar-grabacion.js') "></script>
+<script src=" url_for('static', filename='js/grabar.js') "></script>
+<!-- Enviar grabación -->
+<script>
+    async function sendAudioToServer(audioBlob) {
+        try {
+            const formData = new FormData();
+
+            // Agrega el audio con un nombre y extensión
+            formData.append('audio', audioBlob, 'audio-recording.ogg');
+
+            // Envía el audio al servidor
+            const response = await fetch('/api/meeting_audio', {
+                method: 'POST',
+                body: formData,
+            });
+
+            // Verifica si la respuesta es exitosa
+            if (!response.ok) {
+                try {
+                    const errorData = await response.json();
+                    console.error("Error en el servidor (JSON):", errorData);
+                    return `Error del servidor: ${JSON.stringify(errorData)}`;
+                } catch {
+                    const errorText = await response.text();
+                    console.error("Error en el servidor (texto):", errorText);
+                    return `Error del servidor: ${errorText}`;
+                }
+            }
+
+            // Procesa la respuesta exitosa
+            try {
+                const data = await response.json();
+                console.log("Respuesta del servidor (JSON):", data);
+
+                // Verifica si el atributo 'reply' existe
+                if ('reply' in data) {
+                    return `Respuesta: ${data.reply}`;
+                } else {
+                    console.error("El JSON no contiene el atributo 'reply':", data);
+                    return "Error: El servidor no devolvió el atributo 'reply'.";
+                }
+            } catch {
+                const text = await response.text();
+                console.log("Respuesta del servidor (texto):", text);
+                await textToSpeechStream(text);
+                return `Respuesta: ${text}`;
+            }
+        } catch (error) {
+            console.error("Error al enviar el audio:", error);
+            return `Error al enviar el audio: ${error.message}`;
+        }
+    }
+
+    async function textToSpeechStream(text) {
+        const client = new ElevenLabsClient({apiKey: 'ELEVENLABS_API_KEY'});
+        const voiceId = 'SvU0B5XIX9vlVyFfY2Kc'; // ID de voz de Idalia
+        const modelId = 'eleven_multilingual_v2'; // Modelo TTS a utilizar
+
+        // Realizar la solicitud de TTS en modo streaming
+        try {
+            // Realizar la solicitud de TTS en modo streaming
+            const audioStream = await client.textToSpeech.convertAsStream(voiceId, {
+                text,
+                model_id: modelId,
+                output_format: "mp3_44100_128",
+            });
+
+            // Crear un contexto de audio
+            const audioChunks = [];
+            const reader = audioStream.getReader();
+
+            // Leer datos del flujo
+            while (true) {
+                const {done, value} = await reader.read();
+                if (done) break;
+                audioChunks.push(value);
+            }
+
+            // Verificar que se hayan recibido datos
+            if (audioChunks.length === 0) {
+                console.error("No se recibieron datos de audio");
+                return;
+            }
+
+            // Convertir los fragmentos en un Blob reproducible
+            const audioBlob = new Blob(audioChunks, {type: 'audio/mpeg'});
+            const audioURL = URL.createObjectURL(audioBlob);
+
+            // Reproducir el audio
+            const audio = new Audio(audioURL);
+            await audio.play();
+        } catch (error) {
+            console.error("Error al generar o reproducir el audio:", error);
+        }
+    }
+</script>
+<script>
+
+let mediaRecorder;
+let audioChunks = [];
+let isPaused = false; // Estado de pausa
+
+async function startRecording() {
+    const controlButton = document.getElementById("controlButton");
+    const stopButton = document.getElementById("stopButton");
+    const cancelButton = document.getElementById("cancelButton");
+
+    try {
+        // Obtener permiso del micrófono
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+
+        // Manejar los datos de audio
+        mediaRecorder.ondataavailable = (event) => {
+            audioChunks.push(event.data);
+        };
+
+        mediaRecorder.start();
+        audioChunks = [];
+        isPaused = false;
+
+        // Cambiar el botón a Pausar/Reanudar
+        controlButton.innerText = "Pausar";
+        controlButton.onclick = pauseOrResumeRecording;
+
+        stopButton.disabled = false;
+        cancelButton.disabled = false;
+
+        document.getElementById("responseOutput").innerText = "Grabando...";
+    } catch (error) {
+        console.error("Error al acceder al micrófono:", error);
+        document.getElementById("responseOutput").innerText = "Error al iniciar grabación.";
+    }
+}
+
+function pauseOrResumeRecording() {
+    const controlButton = document.getElementById("controlButton");
+
+    if (mediaRecorder) {
+        if (isPaused) {
+            mediaRecorder.resume();
+            isPaused = false;
+            controlButton.innerText = "Pausar";
+            document.getElementById("responseOutput").innerText = "Grabando...";
+        } else {
+            mediaRecorder.pause();
+            isPaused = true;
+            controlButton.innerText = "Reanudar";
+            document.getElementById("responseOutput").innerText = "Grabación pausada.";
+        }
+    }
+}
+
+function stopRecording() {
+    const controlButton = document.getElementById("controlButton");
+    const stopButton = document.getElementById("stopButton");
+    const cancelButton = document.getElementById("cancelButton");
+
+    if (mediaRecorder) {
+        mediaRecorder.stop();
+        document.getElementById("responseOutput").innerText = "Procesando grabación...";
+        mediaRecorder.onstop = async () => {
+            const audioBlob = new Blob(audioChunks, { type: "audio/ogg" });
+
+            // Enviar el audio al servidor
+            const response = await sendAudioToServer(audioBlob);
+            document.getElementById("responseOutput").innerText = response;
+
+            // Reiniciar botones
+            resetButtons();
+        };
+    }
+}
+
+function cancelRecording() {
+    const controlButton = document.getElementById("controlButton");
+    const stopButton = document.getElementById("stopButton");
+    const cancelButton = document.getElementById("cancelButton");
+
+    if (mediaRecorder && mediaRecorder.state !== "inactive") {
+        mediaRecorder.stream.getTracks().forEach((track) => track.stop());
+        mediaRecorder = null;
+        audioChunks = [];
+        document.getElementById("responseOutput").innerText = "Grabación cancelada.";
+    }
+
+    // Reiniciar botones
+    resetButtons();
+}
+
+function resetButtons() {
+    const controlButton = document.getElementById("controlButton");
+    const stopButton = document.getElementById("stopButton");
+    const cancelButton = document.getElementById("cancelButton");
+
+    controlButton.innerText = "Iniciar Grabación";
+    controlButton.onclick = startRecording;
+    controlButton.disabled = false;
+
+    stopButton.disabled = true;
+    cancelButton.disabled = true;
+}
+
+</script>
 </body>
 </html>
