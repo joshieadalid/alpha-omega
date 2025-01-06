@@ -1,0 +1,28 @@
+requests
+flask
+python-dotenv
+pydub
+# APIs
+openai
+jira
+requests
+# HTTPS
+pyopenssl
+cryptography
+jsonpickle
+
+# Cifrado en la base de datos
+bcrypt
+pyjwt
+# Flask
+flask-injector
+# Base de datos (minutas)
+flask-sqlalchemy
+# Text-to-speech
+elevenlabs
+# Reportes
+weasyprint
+
+# login-server
+flask-bcrypt
+flask-cors
