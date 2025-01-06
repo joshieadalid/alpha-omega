@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from database.database import init_db, hash_password, check_password
+from database.login_database import init_db, hash_password, check_password
 from flask_cors import CORS
 import sqlite3
 
