@@ -1,7 +1,10 @@
+import logging
 from typing import Any
-
 from injector import inject
 
+# Configurar logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
+logger = logging.getLogger(__name__)
 
 class ScriptExecutor:
     @inject
@@ -28,12 +31,17 @@ class ScriptExecutor:
         script: str = self.openai_service.generate_script(prompt)
         python_script: str = self.openai_service.extract_code(script, language='python')
 
-        print(f"""Script a ejecutar:
+        logger.info(f"""Script a ejecutar:
         ------------------
         {python_script}
         ------------------
         """)
 
         # Ejecutar el script en el contexto inicializado
-        exec(python_script, self.context)
+        try:
+            exec(python_script, self.context)
+        except Exception as e:
+            logger.exception("Error al ejecutar el script generado.")
+            raise e
+
         return self.context.get('result')
