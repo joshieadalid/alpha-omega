@@ -70,10 +70,10 @@ function MainMenu() {
           {/* Botón para iniciar grabación */}
           <button
             className="mt-6 bg-white text-blue-800 py-3 px-6 rounded-lg font-semibold flex items-center gap-3 hover:bg-gray-100 hover:scale-105 transition-transform duration-200 shadow-md"
-            onClick={() => navigate("/meeting-mode")}
+            onClick={() => navigate("/minutes-mode")}
           >
             <i className="fas fa-video text-lg"></i>
-            Ir a herramientas de grabación
+            Ir al "modo minutas"
           </button>
         </div>
       </main>

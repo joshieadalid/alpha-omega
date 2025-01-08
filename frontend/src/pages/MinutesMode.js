@@ -95,7 +95,7 @@ function MinutesRecordingApp() {
         {audioSrc && (
           <div className="mt-6 w-full max-w-md">
             <h2 className="font-semibold text-blue-800">Reproducción de Audio</h2>
-            <audio src={audioSrc} controls className="w-full mt-2" />
+            <audio src={audioSrc} controls autoPlay className="w-full mt-2" />
           </div>
         )}
 
