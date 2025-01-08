@@ -16,35 +16,32 @@ in
 pkgs.mkShell {
   buildInputs = [
     (pkgs.python312.withPackages (python-pkgs: with python-pkgs; [
-        requests
         flask
+        flask-injector
+        flask-sqlalchemy
+        flask-migrate
+        flask-cors
+        flask-bcrypt # O usa bcrypt si flask-bcrypt no es necesario
+
+        requests
         python-dotenv
         pydub
+
         # APIs
         openai
         jira
-        requests
+        ## Text-to-speech
+        elevenlabs
+
         # HTTPS
-        pyopenssl
-        cryptography
-        jsonpickle
+        cryptography # O pyopenssl si es necesario
 
         # Cifrado en la base de datos
-        bcrypt
         pyjwt
-        # Flask
-        flask-injector
-        # Base de datos (minutas)
-        flask-sqlalchemy
-        flask-migrate # al cambiar esquemas
-        # Text-to-speech
-        elevenlabs
+
         # Reportes
         weasyprint
-
-        # login-server
-        flask-bcrypt
-        flask-cors
+        jsonpickle
     ]))
     pkgs.nodejs
   ];
