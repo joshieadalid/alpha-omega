@@ -1,20 +1,25 @@
+from enum import Enum
 from typing import Tuple, IO
 from elevenlabs import VoiceSettings
 from elevenlabs.client import ElevenLabs
 from io import BytesIO
 
+class VoiceOption(Enum):
+    WOMAN = "wJqPPQ618aTW29mptyoc"  # Mujer
+    MAN = "JBFqnCBsd6RMkjVDRZzb"    # Hombre
+    IDALIA = "SvU0B5XIX9vlVyFfY2Kc"  # Idalia
+
+
 class ElevenLabsService:
     def __init__(self, api_key: str):
         self.client = ElevenLabs(api_key=api_key)
 
-    def tts_stream(self, text: str) -> Tuple[IO[bytes], str, dict]:
+    def tts_stream(self, text: str, voice: VoiceOption=VoiceOption.IDALIA) -> Tuple[IO[bytes], str, dict]:
         """
         Convierte texto a audio y devuelve un flujo de bytes con su mimetype y headers.
         """
         response = self.client.text_to_speech.convert(
-            # voice_id="wJqPPQ618aTW29mptyoc", # Mujer
-            # voice_id="JBFqnCBsd6RMkjVDRZzb", # Hombre
-            voice_id="SvU0B5XIX9vlVyFfY2Kc",  # Idalia
+            voice_id=voice,
             optimize_streaming_latency="0",
             output_format="mp3_22050_32",
             text=text,

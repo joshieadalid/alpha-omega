@@ -1,13 +1,11 @@
-from flask import request, jsonify
+from flask import request, jsonify, current_app
 import jwt
 from functools import wraps
-from flask import current_app
 
 def jwt_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         token = request.headers.get('Authorization')
-        print(f"Authorization header received: {token}")
         if not token:
             return jsonify({'message': 'Token is missing'}), 401
         try:

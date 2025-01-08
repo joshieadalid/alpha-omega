@@ -26,3 +26,4 @@ weasyprint
 # login-server
 flask-bcrypt
 flask-cors
+flask-migrate

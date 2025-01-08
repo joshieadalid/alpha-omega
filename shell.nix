@@ -36,6 +36,7 @@ pkgs.mkShell {
         flask-injector
         # Base de datos (minutas)
         flask-sqlalchemy
+        flask-migrate # al cambiar esquemas
         # Text-to-speech
         elevenlabs
         # Reportes

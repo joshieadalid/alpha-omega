@@ -18,7 +18,7 @@ function MinutesHistory() {
 useEffect(() => {
   const fetchMinutes = async () => {
     try {
-      const response = await fetch("http://localhost:8080/api/minutes"); // Endpoint directo
+      const response = await fetch("http://localhost:5000/api/minutes"); // Endpoint directo
       if (response.ok) {
         const data = await response.json();
         setMinutes(data.reply); // Usa la respuesta de la API

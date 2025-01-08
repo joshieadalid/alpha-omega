@@ -3,8 +3,8 @@ from flask import Blueprint, request, jsonify
 from injector import inject
 from werkzeug.datastructures import FileStorage
 
-from services.openai_service import OpenAIService
-from services.script_executor import ScriptExecutor
+from chatbot.services.openai_service import OpenAIService
+from chatbot.services.script_executor import ScriptExecutor
 
 # Crear Blueprint con prefijo '/chatbot'
 chatbot_bp = Blueprint('chatbot_route', __name__)

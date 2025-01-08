@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, current_app
 from injector import inject
-from services.elevenlabs_service import ElevenLabsService
+from chatbot.services.elevenlabs_service import ElevenLabsService
 
 # Crear el blueprint para ElevenLabs
 elevenlabs_bp = Blueprint("elevenlabs", __name__)

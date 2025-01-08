@@ -3,11 +3,12 @@ from injector import Binder, singleton
 from jira import JIRA
 
 from config import Config
-from services.audio_service import AudioService
-from services.elevenlabs_service import ElevenLabsService
-from services.openai_service import OpenAIService
-from services.script_executor import ScriptExecutor
-
+from chatbot.services.audio_service import AudioService
+from chatbot.services.elevenlabs_service import ElevenLabsService
+from chatbot.services.openai_service import OpenAIService
+from chatbot.services.script_executor import ScriptExecutor
+from authentication.repositories.user_repository import UserRepository
+from authentication.services.user_service import UserService
 
 def configure(binder: Binder):
     try:
@@ -34,6 +35,11 @@ def configure(binder: Binder):
                     scope=singleton)
         binder.bind(ElevenLabsService, to=elevenlabs_service)
         binder.bind(AudioService, to=audio_service)
+
+        # Registrar UserRepository y UserService
+        user_repository = UserRepository()
+        binder.bind(UserRepository, to=user_repository, scope=singleton)
+        binder.bind(UserService, to=lambda: UserService(user_repository), scope=singleton)
 
         print("Todas las dependencias registradas correctamente.")
     except Exception as e:

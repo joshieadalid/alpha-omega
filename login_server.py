@@ -54,35 +54,6 @@ def login():
     return jsonify({"error": "Credenciales incorrectas"}), 401
 
 
-@app.route('/api/minutes', methods=['POST'])
-def create_minute():
-    data = request.get_json()
-    user_id = data.get('user_id')
-    text = data.get('text')
-    created_at = data.get('created_at')
-
-    conn = sqlite3.connect('database.db')
-    cursor = conn.cursor()
-    cursor.execute('INSERT INTO minutes (user_id, text, created_at) VALUES (?, ?, ?)',
-                   (user_id, text, created_at))
-    conn.commit()
-    conn.close()
-
-    return jsonify({"message": "Minuta creada exitosamente"}), 201
-
-@app.route('/api/minutes/<user_id>', methods=['GET'])
-def get_minutes(user_id):
-    conn = sqlite3.connect('database.db')
-    cursor = conn.cursor()
-
-    # Cambia la consulta para obtener las minutas de un usuario específico
-    cursor.execute('SELECT text, created_at FROM minutes WHERE user_id = ?', (user_id,))
-    minutes = cursor.fetchall()
-    conn.close()
-
-    # Devolver las minutas como una lista de diccionarios
-    return jsonify([{"text": row[0], "timestamp": row[1]} for row in minutes]), 200
-
 if __name__ == "__main__":
     app.run(debug=True, host="localhost")
 

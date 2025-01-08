@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, Response
 from injector import inject
-from services.audio_service import AudioService
+from chatbot.services.audio_service import AudioService
 
 audio_bp = Blueprint('audio', __name__)
 

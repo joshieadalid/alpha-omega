@@ -1,20 +1,16 @@
+import logging
+
 from flask import Flask
 from flask_injector import FlaskInjector
-from flask_cors import CORS  # Importar CORS
 
-from blueprints.audio_bp import audio_bp
-from blueprints.auth_bp import auth_bp
-from blueprints.chatbot_bp import chatbot_bp
-from blueprints.elevenlabs_bp import elevenlabs_bp
-from blueprints.minutes_bp import minutes_bp
-from blueprints.modes_bp import modes_bp
-# Blueprints
-from blueprints.root import root_bp
+from authentication.blueprints.auth_front_bp import auth_front_bp
+from chatbot.blueprints.audio_bp import audio_bp
+from chatbot.blueprints.meeting_mode_bp import chatbot_bp
+from chatbot.blueprints.elevenlabs_bp import elevenlabs_bp
 from config import Config
-# Contenedor de dependencias
-from di_container import configure
-# Servicios
-from services.database_manager import db_manager
+from di_container import configure  # Contenedor de dependencias
+from minutes.blueprints.minutes_bp import minutes_bp
+from shared.extensions import db, cors, migrate
 
 
 def create_app():
@@ -23,24 +19,22 @@ def create_app():
     # Configuración adicional
     app.config.from_object(Config)
 
-    # Inicializar base de datos
-    db_manager.init_app(app)
+    # Configurar logging
+    logging.basicConfig(level=app.config['LOG_LEVEL'], format=app.config['LOG_FORMAT'],
+        handlers=[logging.FileHandler(app.config['LOG_FILE']),  # Logs a archivo
+            logging.StreamHandler()  # Logs a consola
+        ])
 
-    # Habilitar CORS para todas las rutas
-    CORS(app)  # Permitir solicitudes desde cualquier origen
+    db.init_app(app)
+    migrate.init_app(app, db)
+    cors.init_app(app, resources={r"/*": {"origins": ["http://localhost:3000", "https://mi-dominio.com"]}})
 
     # Registrar rutas (blueprints)
-    app.register_blueprint(root_bp, url_prefix='/')
     app.register_blueprint(chatbot_bp, url_prefix='/api')
-    app.register_blueprint(auth_bp, url_prefix='/auth')
-    app.register_blueprint(modes_bp, url_prefix='/modes')
+    app.register_blueprint(auth_front_bp, url_prefix='/api')
     app.register_blueprint(minutes_bp, url_prefix='/api')
     app.register_blueprint(elevenlabs_bp, url_prefix='/tts')
     app.register_blueprint(audio_bp, url_prefix='/api')
-    # Registrar el blueprint del frontend
-    # app.register_blueprint(frontend_bp)
-    # Eventos de cierre para la base de datos
-    app.teardown_appcontext(db_manager.close_connection)
 
     return app
 
