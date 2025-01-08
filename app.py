@@ -27,7 +27,7 @@ def create_app():
 
     db.init_app(app)
     migrate.init_app(app, db)
-    cors.init_app(app, resources={r"/*": {"origins": ["http://localhost:3000", "https://mi-dominio.com"]}})
+    cors.init_app(app, resources={r"/*": {"origins": ["http://localhost:3000"]}},supports_credentials=True)
 
     # Registrar rutas (blueprints)
     app.register_blueprint(chatbot_bp, url_prefix='/api')

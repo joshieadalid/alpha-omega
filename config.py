@@ -12,7 +12,7 @@ class Config:
     DEBUG: bool = os.getenv('DEBUG', 'False').lower() in ('true', '1', 'yes')
     HOST: str = os.getenv('HOST', '127.0.0.1')
     PORT: int = int(os.getenv('PORT', 5000))
-    SQLALCHEMY_DATABASE_URI: str = os.getenv('SQLALCHEMY_DATABASE_URI', 'sqlite:///example.db')
+    SQLALCHEMY_DATABASE_URI: str = os.getenv('SQLALCHEMY_DATABASE_URI', 'sqlite:///database.db')
     SQLALCHEMY_TRACK_MODIFICATIONS: bool = False
     # Configuración de OpenAI
     OPENAI_API_KEY: str = os.getenv('OPENAI_API_KEY', 'default-openai-api-key')
