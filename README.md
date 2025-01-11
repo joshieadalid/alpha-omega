@@ -152,3 +152,46 @@ Las siguientes acciones se ejecutan en función de `action_code` enviado al chat
 ## **Contribuciones**
 
 Este proyecto es para uso personal, pero se puede ampliar fácilmente. Cualquier mejora o sugerencia es bienvenida.
+
+### Instrucciones para desplegar el servidor
+
+#### **Frontend (React)**
+1. Abre una terminal y navega al directorio `frontend/`:
+   ```bash
+   cd frontend/
+   ```
+2. Instala las dependencias:
+   ```bash
+   npm install
+   ```
+3. Genera la versión optimizada del proyecto:
+   ```bash
+   npm run build
+   ```
+4. Para servir la aplicación en el puerto 3000, puedes usar cualquiera de estas dos opciones:
+   - Opción 1 (con `serve`):
+     ```bash
+     npx serve -s build -l 3000
+     ```
+   - Opción 2 (con `npm`):
+     ```bash
+     npm run serve
+     ```
+
+#### **Backend (Flask)**
+1. Navega al directorio del backend en la terminal.
+2. Instala las dependencias necesarias desde `requirements.txt`:
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. Ejecuta la aplicación Flask en el puerto 5000:
+   ```bash
+   flask run --host=0.0.0.0 --port=5000
+   ```
+
+#### **Problemas comunes**
+- Si la página muestra un error de conexión al servidor, verifica si la base de datos está funcionando correctamente.
+- Para reiniciar la base de datos, ejecuta el script `reset_database.py`:
+   ```bash
+   python reset_database.py
+   ```
