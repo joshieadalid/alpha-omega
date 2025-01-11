@@ -186,7 +186,7 @@ Este proyecto es para uso personal, pero se puede ampliar fácilmente. Cualquier
    ```
 3. Ejecuta la aplicación Flask en el puerto 5000:
    ```bash
-   flask run --host=0.0.0.0 --port=5000
+   python app.py
    ```
 
 #### **Problemas comunes**
